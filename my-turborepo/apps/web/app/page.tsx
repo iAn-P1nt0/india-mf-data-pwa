@@ -1,27 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo } from "react";
 
 import styles from "./page.module.css";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
-
-type FundPreview = {
-  schemeCode: string;
-  schemeName: string;
-  fundHouse?: string | null;
-  schemeCategory?: string | null;
-  schemeType?: string | null;
-};
-
-type FundsResponse = {
-  success: boolean;
-  funds?: FundPreview[];
-  disclaimer?: string;
-  fetchedAt?: string;
-  source?: string;
-  error?: string;
-};
+import { useFundPreview } from "@/hooks/useFundPreview";
+import { useNavHistory } from "@/hooks/useNavHistory";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { API_BASE_URL, SEBI_DISCLAIMER } from "@/lib/config";
+import type { FundPreview } from "@/lib/types";
 
 const SAMPLE_FUNDS: FundPreview[] = [
   {
@@ -54,120 +41,22 @@ const SAMPLE_FUNDS: FundPreview[] = [
   }
 ];
 
-const SEBI_DISCLAIMER =
-  "Mutual fund investments are subject to market risks. Read all scheme related documents carefully. Historical performance is not an indicator of future returns.";
-
-function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState<boolean>(
-    typeof navigator === "undefined" ? true : navigator.onLine
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    function handleOnline() {
-      setIsOnline(true);
-    }
-
-    function handleOffline() {
-      setIsOnline(false);
-    }
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  return isOnline;
-}
-
-function useFundPreview(limit = 6) {
-  const [state, setState] = useState<{
-    loading: boolean;
-    error?: string;
-    funds: FundPreview[];
-    fetchedAt?: string;
-    disclaimer?: string;
-    source?: string;
-  }>({
-    loading: true,
-    funds: []
-  });
-
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-
-    async function load() {
-      setState((prev) => ({ ...prev, loading: true, error: undefined }));
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/funds?limit=${limit}`, {
-          signal: controller.signal
-        });
-
-        if (!response.ok) {
-          throw new Error(`API returned ${response.status}`);
-        }
-
-        const payload = (await response.json()) as FundsResponse;
-        if (!isMounted) {
-          return;
-        }
-
-        setState({
-          loading: false,
-          funds: payload.funds ?? [],
-          fetchedAt: payload.fetchedAt,
-          disclaimer: payload.disclaimer,
-          source: payload.source ?? "MFapi.in",
-          error: payload.success ? undefined : payload.error ?? "Unable to fetch funds"
-        });
-      } catch (error) {
-        if (!isMounted) {
-          return;
-        }
-        const message = error instanceof Error ? error.message : "Unable to reach API";
-        setState((prev) => ({ ...prev, loading: false, error: message }));
-      }
-    }
-
-    load();
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [limit]);
-
-  return state;
-}
-
 export default function Home() {
   const isOnline = useOnlineStatus();
-  const { funds, loading, error, fetchedAt, disclaimer, source } = useFundPreview(6);
-
+  const { funds, isLoading, error, fetchedAt, disclaimer, source, usedCacheFallback } = useFundPreview(6);
   const fundList = funds.length ? funds : SAMPLE_FUNDS;
-  const formattedTimestamp = useMemo(() => {
-    if (!fetchedAt) {
-      return undefined;
-    }
-    try {
-      return new Intl.DateTimeFormat("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short"
-      }).format(new Date(fetchedAt));
-    } catch {
-      return fetchedAt;
-    }
-  }, [fetchedAt]);
+  const spotlightFund = fundList[0];
+  const startDate = useMemo(() => toIsoDate(daysAgo(30)), []);
+  const endDate = useMemo(() => toIsoDate(new Date()), []);
+  const {
+    points: navPoints,
+    isLoading: navLoading,
+    error: navError
+  } = useNavHistory({ schemeCode: spotlightFund?.schemeCode, startDate, endDate });
 
-  const healthState = loading ? "Validating" : error ? "Degraded" : "Healthy";
+  const navStats = useMemo(() => summarizeNav(navPoints), [navPoints]);
+
+  const healthState = isLoading ? "Validating" : error ? "Degraded" : "Healthy";
 
   return (
     <div className={styles.page}>
@@ -192,6 +81,9 @@ export default function Home() {
               >
                 Quick start guide
               </a>
+              <Link href="/tools/sip" className={styles.secondaryAction}>
+                SIP toolkit
+              </Link>
             </div>
           </div>
           <div className={styles.statGrid}>
@@ -203,12 +95,12 @@ export default function Home() {
             <div className={styles.statCard}>
               <p className={styles.statLabel}>Live Funds Cached</p>
               <p className={styles.statValue}>{fundList.length}</p>
-              <p className={styles.statMeta}>IndexedDB wiring TODO</p>
+              <p className={styles.statMeta}>{usedCacheFallback ? "Serving cached data" : "Fresh pull"}</p>
             </div>
             <div className={styles.statCard}>
               <p className={styles.statLabel}>Next milestone</p>
-              <p className={styles.statValue}>Dexie Cache</p>
-              <p className={styles.statMeta}>Then SIP parity</p>
+              <p className={styles.statValue}>SIP parity</p>
+              <p className={styles.statMeta}>Tooling shipped below</p>
             </div>
           </div>
         </header>
@@ -224,27 +116,49 @@ export default function Home() {
           <article className={styles.statusCard}>
             <p className={styles.eyebrow}>Service Worker</p>
             <h2>Bootstrap shell arrives under 1s</h2>
-            <p>
-              Service worker + manifest landing right after this shell. Pre-cache core routes and fund summaries to
-              survive Render cold starts.
-            </p>
+            <p>Service worker + manifest now pin the app shell and manifest for offline-first launches.</p>
           </article>
           <article className={styles.statusCard}>
             <p className={styles.eyebrow}>IndexedDB</p>
-            <h2>Dexie store planned</h2>
-            <p>
-              Dexie-powered caches will pin the latest fund list + NAV windows locally. This placeholder keeps TODOs
-              visible until the store is wired.
-            </p>
+            <h2>Dexie cache live</h2>
+            <p>Funds + NAV windows hydrate from IndexedDB instantly, then refresh in the background when online.</p>
           </article>
           <article className={styles.statusCard}>
             <p className={styles.eyebrow}>SIP tooling</p>
             <h2>Parity with backend formula</h2>
             <p>
-              SIP UI will call the validated `/api/portfolio/sip-calculator` endpoint to ensure client/server parity
-              and embed compliance notes next to projections.
+              SIP UI calls the server when available and gracefully falls back to the validated client formula, keeping
+              compliance front-and-center.
             </p>
           </article>
+        </section>
+
+        <section className={styles.navSection}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.eyebrow}>NAV insight</p>
+              <h2>{spotlightFund?.schemeName ?? "Fund spotlight"}</h2>
+            </div>
+            <p className={styles.sectionHint}>Last 30 days · {spotlightFund?.schemeCode ?? "N/A"}</p>
+          </div>
+          <div className={styles.navGrid}>
+            <div className={styles.navSummary}>
+              <p className={styles.navLabel}>Latest NAV</p>
+              <p className={styles.navPrimary}>{navStats.lastNav ?? "--"}</p>
+              <p className={styles.navChange} data-positive={(navStats.change ?? 0) >= 0}>
+                {navLoading ? "Syncing" : formatChange(navStats.change)} (30d)
+              </p>
+              {navError && <p className={styles.metaLine}>NAV cache in use: {navError}</p>}
+            </div>
+            <ul className={styles.navList}>
+              {(navPoints ?? []).slice(-6).reverse().map((point) => (
+                <li key={`${point.date}-${point.nav}`}>
+                  <span>{point.date}</span>
+                  <span className={styles.navValue}>{Number(point.nav).toFixed(3)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         <section className={styles.fundSection}>
@@ -286,7 +200,7 @@ export default function Home() {
           </div>
           <p className={styles.metaLine}>
             Source: {source ?? "MFapi.in"}
-            {formattedTimestamp ? ` · Last refreshed ${formattedTimestamp}` : ""}
+            {fetchedAt ? ` · Last refreshed ${fetchedAt}` : ""}
             {error ? ` · ${error}` : ""}
           </p>
         </section>
@@ -296,9 +210,10 @@ export default function Home() {
           <h2>Immediate engineering TODOs</h2>
           <ul>
             <li>✅ Backend NAV filter + Vitest harness are already merged.</li>
-            <li>🚧 Wire Dexie stores for `funds`, `navHistory`, and `portfolio` slices.</li>
-            <li>🚧 Adopt React Query (or RTK Query) for stale-while-revalidate fetches.</li>
-            <li>🚧 Ship SIP calculator UI with server parity + SEBI disclaimer surface.</li>
+            <li>✅ Dexie stores power `funds` + `navHistory` offline caches.</li>
+            <li>✅ React Query orchestrates stale-while-revalidate flows.</li>
+            <li>🚧 Portfolio slice + Dexie wiring still pending.</li>
+            <li>🚧 CAS import + alerts remain on the roadmap.</li>
           </ul>
         </section>
 
@@ -309,4 +224,35 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+function daysAgo(count: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - count);
+  return date;
+}
+
+function toIsoDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function summarizeNav(points: { date: string; nav: number }[]) {
+  if (!points?.length) {
+    return { lastNav: undefined, change: undefined };
+  }
+  const sorted = [...points].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const first = sorted.at(0);
+  const last = sorted.at(-1);
+  return {
+    lastNav: last ? last.nav.toFixed(3) : undefined,
+    change: first && last ? last.nav - first.nav : undefined
+  };
+}
+
+function formatChange(delta?: number) {
+  if (typeof delta !== "number") {
+    return "--";
+  }
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta.toFixed(3)}`;
 }

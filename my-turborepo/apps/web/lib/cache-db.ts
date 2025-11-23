@@ -44,6 +44,13 @@ export function getCacheDb() {
   return dbInstance;
 }
 
+export async function resetCacheDb() {
+  if (dbInstance) {
+    await dbInstance.delete();
+    dbInstance = null;
+  }
+}
+
 export async function storeFundsSnapshot(snapshot: FundsResponse) {
   const db = getCacheDb();
   if (!db || !snapshot.funds?.length) {

@@ -180,10 +180,89 @@
   }
 }
 
+.sectionHint {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .sectionActions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.navSection {
+  border: 1px solid var(--border-color);
+  border-radius: 28px;
+  padding: 28px;
+  background: var(--card-bg);
+}
+
+.navGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  align-items: center;
+}
+
+.navSummary {
+  border-right: 1px solid var(--border-color);
+  padding-right: 20px;
+}
+
+@media (max-width: 700px) {
+  .navSummary {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+.navLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.navPrimary {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.navChange {
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.navChange[data-positive="true"] {
+  color: #15803d;
+}
+
+.navChange[data-positive="false"] {
+  color: #dc2626;
+}
+
+.navList {
+  list-style: none;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navList li {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-geist-mono);
+  font-size: 14px;
+}
+
+.navValue {
+  font-weight: 600;
 }
 
 .fundGrid {
