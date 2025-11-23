@@ -54,6 +54,7 @@ Browser (PWA) ──HTTPS──► Vercel Edge/CDN ──SSR/API proxy──► 
 Secrets per stage:
 - `NEXT_PUBLIC_API_BASE_URL`: `https://india-mf-api.onrender.com` (prod) / Render staging URL (preview).
 - `NEXT_TELEMETRY_DISABLED=1` to avoid noisy logs.
+- Render service env: `CORS_ALLOWED_ORIGINS=https://india-mf-data-pwa.vercel.app,https://*.vercel.app` so browser fetches are accepted.
 
 ---
 

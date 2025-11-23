@@ -61,7 +61,8 @@ export function useFundPreview(limit = 6) {
     try {
       return new Intl.DateTimeFormat("en-IN", {
         dateStyle: "medium",
-        timeStyle: "short"
+        timeStyle: "short",
+        timeZone: "Asia/Kolkata"
       }).format(new Date(fetchedAt));
     } catch {
       return fetchedAt;

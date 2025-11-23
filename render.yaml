@@ -19,3 +19,5 @@ services:
         value: "postgresql://ianpinto_admin:Y02GfxJ3pf7JmMW3G0zBmVsMVn8t0kJy@dpg-d4hcdr7diees73bf2qmg-a.oregon-postgres.render.com/imfd_pg_db"
       - key: PORT
         value: "10000"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://india-mf-data-pwa.vercel.app,https://*.vercel.app"

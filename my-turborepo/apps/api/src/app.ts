@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 
 import { env } from './config/env';
+import { createOriginMatchers } from './lib/cors';
 import healthRouter from './routes/health';
 import fundsRouter from './routes/funds';
 
@@ -13,19 +14,16 @@ export function createApp() {
     ? env.CORS_ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
     : [];
 
-  const allowedOrigins = env.NODE_ENV === 'development' ? [...devOrigins, ...configuredOrigins] : configuredOrigins;
+  const rawAllowedOrigins = env.NODE_ENV === 'development' ? [...devOrigins, ...configuredOrigins] : configuredOrigins;
+  const originMatchers = createOriginMatchers(rawAllowedOrigins);
 
   app.use(cors({
     origin: (origin, callback) => {
-      if (!allowedOrigins.length) {
+      if (!origin || !originMatchers.length) {
         callback(null, true);
         return;
       }
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-      if (allowedOrigins.includes(origin)) {
+      if (originMatchers.some((match) => match(origin))) {
         callback(null, true);
       } else {
         callback(new Error(`Origin ${origin} not allowed by CORS`));
