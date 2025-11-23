@@ -199,9 +199,11 @@ function toIso(value: string) {
   }
   const parts = value.split("-");
   if (parts.length === 3) {
-    const [day, month, year] = parts;
-    const iso = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T00:00:00.000Z`;
-    return iso;
+    const [day = "", month = "", year = ""] = parts;
+    if (day && month && year) {
+      const iso = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T00:00:00.000Z`;
+      return iso;
+    }
   }
   return new Date(value).toISOString();
 }
