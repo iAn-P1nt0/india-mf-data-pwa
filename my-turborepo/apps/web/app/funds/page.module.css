@@ -1,0 +1,169 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f9fafb, #ffffff);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.header {
+  margin-bottom: 3rem;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary, #3b82f6);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: var(--primary-dark, #2563eb);
+}
+
+.title {
+  margin: 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 0.75rem 0 0 0;
+  font-size: 1.125rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.6;
+}
+
+.selectorSection,
+.dateSection,
+.chartSection,
+.metricsSection,
+.fundInfo {
+  margin-bottom: 2rem;
+}
+
+.sectionHeader {
+  margin-bottom: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.sectionHint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.fundInfo {
+  padding: 1.5rem;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 0.75rem;
+}
+
+.fundHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.fundName {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  line-height: 1.3;
+}
+
+.fundMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.fundCode {
+  font-family: monospace;
+  background: var(--bg-secondary, #f3f4f6);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+.separator {
+  color: var(--border, #d1d5db);
+}
+
+.disclaimer {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid var(--warning, #fbbf24);
+  border-radius: 0.75rem;
+  margin-top: 3rem;
+}
+
+.disclaimerIcon {
+  flex-shrink: 0;
+  color: var(--warning-dark, #d97706);
+}
+
+.disclaimerTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--warning-dark, #92400e);
+}
+
+.disclaimerText {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--warning-dark, #78350f);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .fundHeader {
+    flex-direction: column;
+  }
+
+  .fundMeta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .separator {
+    display: none;
+  }
+}

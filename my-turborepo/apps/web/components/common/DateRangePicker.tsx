@@ -34,8 +34,8 @@ export function DateRangePicker({
     const start = new Date();
     start.setDate(start.getDate() - days);
 
-    const startDateStr = start.toISOString().split("T")[0];
-    const endDateStr = end.toISOString().split("T")[0];
+    const startDateStr = start.toISOString().split("T")[0]!;
+    const endDateStr = end.toISOString().split("T")[0]!;
 
     onDateChange(startDateStr, endDateStr);
     setShowCustom(false);

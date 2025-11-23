@@ -20,8 +20,8 @@ export function PerformanceMetrics({ navPoints, schemeName }: PerformanceMetrics
     }
 
     const sorted = [...navPoints].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const firstNav = sorted[0].nav;
-    const lastNav = sorted[sorted.length - 1].nav;
+    const firstNav = sorted[0]!.nav;
+    const lastNav = sorted[sorted.length - 1]!.nav;
     const highNav = Math.max(...sorted.map((p) => p.nav));
     const lowNav = Math.min(...sorted.map((p) => p.nav));
 
@@ -30,12 +30,12 @@ export function PerformanceMetrics({ navPoints, schemeName }: PerformanceMetrics
     const percentReturn = ((lastNav - firstNav) / firstNav) * 100;
 
     // Calculate CAGR (approximate based on days)
-    const daysDiff = (new Date(sorted[sorted.length - 1].date).getTime() - new Date(sorted[0].date).getTime()) / (1000 * 60 * 60 * 24);
+    const daysDiff = (new Date(sorted[sorted.length - 1]!.date).getTime() - new Date(sorted[0]!.date).getTime()) / (1000 * 60 * 60 * 24);
     const years = daysDiff / 365;
     const cagr = years > 0 ? (Math.pow(lastNav / firstNav, 1 / years) - 1) * 100 : 0;
 
     // Calculate volatility (standard deviation of daily returns)
-    const returns = sorted.slice(1).map((point, i) => (point.nav - sorted[i].nav) / sorted[i].nav);
+    const returns = sorted.slice(1).map((point, i) => (point.nav - sorted[i]!.nav) / sorted[i]!.nav);
     const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length;
     const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length;
     const volatility = Math.sqrt(variance) * Math.sqrt(252) * 100; // Annualized
@@ -50,7 +50,7 @@ export function PerformanceMetrics({ navPoints, schemeName }: PerformanceMetrics
       cagr,
       volatility,
       dataPoints: sorted.length,
-      dateRange: `${sorted[0].date} to ${sorted[sorted.length - 1].date}`,
+      dateRange: `${sorted[0]!.date} to ${sorted[sorted.length - 1]!.date}`,
     };
   }, [navPoints]);
 

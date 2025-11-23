@@ -16,20 +16,20 @@ export default function FundsAnalysisPage() {
   const { funds, isLoading, disclaimer } = useFundPreview(100);
 
   const [selectedFund, setSelectedFund] = useState<FundPreview | null>(null);
-  const [dateRange, setDateRange] = useState(() => {
+  const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>(() => {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 90); // Default 3 months
     return {
-      startDate: start.toISOString().split("T")[0],
-      endDate: end.toISOString().split("T")[0],
+      startDate: start.toISOString().split("T")[0]!,
+      endDate: end.toISOString().split("T")[0]!,
     };
   });
 
   // Set first fund as default when funds load
   useEffect(() => {
     if (funds.length > 0 && !selectedFund) {
-      setSelectedFund(funds[0]);
+      setSelectedFund(funds[0] ?? null);
     }
   }, [funds, selectedFund]);
 

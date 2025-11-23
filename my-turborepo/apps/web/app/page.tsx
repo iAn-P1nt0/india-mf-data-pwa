@@ -89,20 +89,15 @@ export default function Home() {
               so retail investors can trust the data even when Render cold starts.
             </p>
             <div className={styles.heroActions}>
-              <a href="https://www.mfapi.in/" className={styles.primaryAction} target="_blank" rel="noreferrer">
-                View MFapi Source
-              </a>
-              <a
-                href="https://github.com/iAn-P1nt0/mf-data-pwa/blob/main/Quick-Start-Guide.md"
-                className={styles.secondaryAction}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Quick start guide
-              </a>
+              <Link href="/funds" className={styles.primaryAction}>
+                Fund Analysis
+              </Link>
               <Link href="/tools/sip" className={styles.secondaryAction}>
                 SIP toolkit
               </Link>
+              <a href="https://www.mfapi.in/" className={styles.secondaryAction} target="_blank" rel="noreferrer">
+                View MFapi Source
+              </a>
             </div>
           </div>
           <div className={styles.statGrid}>
