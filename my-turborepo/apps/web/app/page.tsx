@@ -92,6 +92,9 @@ export default function Home() {
               <Link href="/funds" className={styles.primaryAction}>
                 Fund Analysis
               </Link>
+              <Link href="/api-explorer" className={styles.secondaryAction}>
+                API Explorer
+              </Link>
               <Link href="/tools/sip" className={styles.secondaryAction}>
                 SIP toolkit
               </Link>
