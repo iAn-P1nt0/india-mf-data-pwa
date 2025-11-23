@@ -61,13 +61,14 @@ export async function resetCacheDb() {
 
 export async function storeFundsSnapshot(snapshot: FundsResponse) {
   const db = getCacheDb();
-  if (!db || !snapshot.funds?.length) {
+  const funds = snapshot.funds ?? [];
+  if (!db || !funds.length) {
     return;
   }
   const now = Date.now();
   await db.transaction("rw", db.funds, db.meta, async () => {
     await db.funds.clear();
-    await db.funds.bulkPut(snapshot.funds.map((fund) => ({ ...fund, cachedAt: now })));
+    await db.funds.bulkPut(funds.map((fund) => ({ ...fund, cachedAt: now })));
     await db.meta.put({
       key: "funds",
       value: {
