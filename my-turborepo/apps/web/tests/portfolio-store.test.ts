@@ -4,19 +4,27 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { PortfolioHolding } from "@/lib/types";
 import { usePortfolioStore } from "@/hooks/usePortfolioStore";
 
-const listPortfolioHoldingsMock = vi.fn<[], Promise<PortfolioHolding[]>>();
-const upsertPortfolioHoldingMock = vi.fn();
-const deletePortfolioHoldingMock = vi.fn();
+const cacheDbMocks = vi.hoisted(() => ({
+  listPortfolioHoldings: vi.fn<[], Promise<PortfolioHolding[]>>(),
+  upsertPortfolioHolding: vi.fn(),
+  deletePortfolioHolding: vi.fn()
+}));
 
 vi.mock("@/lib/cache-db", async () => {
   const actual = await vi.importActual<typeof import("@/lib/cache-db")>("@/lib/cache-db");
   return {
     ...actual,
-    listPortfolioHoldings: listPortfolioHoldingsMock,
-    upsertPortfolioHolding: upsertPortfolioHoldingMock,
-    deletePortfolioHolding: deletePortfolioHoldingMock
+    listPortfolioHoldings: cacheDbMocks.listPortfolioHoldings,
+    upsertPortfolioHolding: cacheDbMocks.upsertPortfolioHolding,
+    deletePortfolioHolding: cacheDbMocks.deletePortfolioHolding
   };
 });
+
+const {
+  listPortfolioHoldings: listPortfolioHoldingsMock,
+  upsertPortfolioHolding: upsertPortfolioHoldingMock,
+  deletePortfolioHolding: deletePortfolioHoldingMock
+} = cacheDbMocks;
 
 describe("usePortfolioStore", () => {
   beforeEach(() => {
