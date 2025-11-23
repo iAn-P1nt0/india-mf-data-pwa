@@ -64,6 +64,8 @@ npm run prisma:deploy --workspace=apps/api     # apply migrations (Render)
 - Express server split into `createApp` + bootstrap entry.
 - `GET /api/health` pings Prisma/PostgreSQL (`SELECT 1`).
 - `GET /api/funds` proxies MFapi.in with optional `?q=` filter and returns SEBI disclaimer metadata.
+- `GET /api/funds/:schemeCode` exposes MFapi fund metadata/details.
+- `GET /api/funds/:schemeCode/nav?start=YYYY-MM-DD&end=YYYY-MM-DD` filters NAV history server-side and rejects invalid/unsorted date windows with `400` responses.
 - Prisma schema defines `Scheme` + `NavHistory` tables with indexes that match the blueprint.
 - `.env.example` documents all required secrets.
 - Turbo caches `dist/**` artifacts from the API build.

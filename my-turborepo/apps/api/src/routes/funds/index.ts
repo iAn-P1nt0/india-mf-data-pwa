@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { fetchFundDetails, fetchFunds, fetchFundsFiltered, fetchHistoricalNav, sebiDisclaimer } from '../../services/mfapi';
 
 const router = Router();
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 router.get('/', async (req, res) => {
   const limitParam = Number(req.query.limit ?? '10');
@@ -51,9 +52,39 @@ router.get('/:schemeCode', async (req, res) => {
 
 router.get('/:schemeCode/nav', async (req, res) => {
   const schemeCode = req.params.schemeCode;
-  const { start, end } = req.query;
+  const start = typeof req.query.start === 'string' ? req.query.start : undefined;
+  const end = typeof req.query.end === 'string' ? req.query.end : undefined;
+
+  if (start && !ISO_DATE_REGEX.test(start)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid start date. Use YYYY-MM-DD format.',
+      source: 'india-mf-data-api'
+    });
+  }
+
+  if (end && !ISO_DATE_REGEX.test(end)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid end date. Use YYYY-MM-DD format.',
+      source: 'india-mf-data-api'
+    });
+  }
+
+  if (start && end) {
+    const startDate = new Date(`${start}T00:00:00Z`);
+    const endDate = new Date(`${end}T00:00:00Z`);
+    if (startDate > endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'start must be before or equal to end.',
+        source: 'india-mf-data-api'
+      });
+    }
+  }
+
   try {
-    const navHistory = await fetchHistoricalNav(schemeCode, start as string | undefined, end as string | undefined);
+    const navHistory = await fetchHistoricalNav(schemeCode, start, end);
     res.json({
       success: true,
       navHistory,

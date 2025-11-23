@@ -94,7 +94,31 @@ export async function fetchHistoricalNav(
   if (startDate) params.append('start', startDate);
   if (endDate) params.append('end', endDate);
   const url = params.size ? `${env.MFAPI_BASE_URL}/${schemeCode}?${params.toString()}` : `${env.MFAPI_BASE_URL}/${schemeCode}`;
-  return fetchWithTimeout<FundResponse>(url);
+  const response = await fetchWithTimeout<FundResponse>(url);
+
+  if (!startDate && !endDate) {
+    return response;
+  }
+
+  const startBoundary = toIsoDate(startDate);
+  const endBoundary = toIsoDate(endDate);
+
+  if (!startBoundary && !endBoundary) {
+    return response;
+  }
+
+  const filteredData = response.data.filter((point) => {
+    const pointDate = parseMfapiDate(point.date);
+    if (!pointDate) return true;
+    if (startBoundary && pointDate < startBoundary) return false;
+    if (endBoundary && pointDate > endBoundary) return false;
+    return true;
+  });
+
+  return {
+    ...response,
+    data: filteredData
+  };
 }
 
 function normalizeFund(item: RawFundListItem): FundListItem {
@@ -109,3 +133,18 @@ function normalizeFund(item: RawFundListItem): FundListItem {
 
 export const sebiDisclaimer =
   'Mutual fund investments are subject to market risks. Read all scheme related documents carefully. Historical returns do not guarantee future performance.';
+
+function toIsoDate(value?: string): Date | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
+function parseMfapiDate(value: string): Date | undefined {
+  const [day, month, year] = value.split('-').map((token) => Number.parseInt(token, 10));
+  if (!day || !month || !year) {
+    return undefined;
+  }
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
