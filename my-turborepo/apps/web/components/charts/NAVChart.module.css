@@ -1,0 +1,17 @@
+.container {
+  width: 100%;
+  padding: 1rem;
+  background: var(--card-bg, #ffffff);
+  border-radius: 0.5rem;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary, #f9fafb);
+  border: 1px dashed var(--border, #e5e7eb);
+  border-radius: 0.5rem;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.875rem;
+}
