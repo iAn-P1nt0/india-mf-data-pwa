@@ -62,6 +62,41 @@ export async function fetchFundsFiltered(query: string, limit = 20): Promise<Fun
   return filtered.slice(0, Math.min(Math.max(limit, 1), MAX_LIMIT)).map(normalizeFund);
 }
 
+interface FundResponse {
+  meta: FundMeta;
+  data: NavPoint[];
+  status: string;
+}
+
+interface FundMeta {
+  fund_house: string;
+  scheme_type: string;
+  scheme_category: string;
+  scheme_code: string;
+  scheme_name: string;
+}
+
+interface NavPoint {
+  date: string;
+  nav: string;
+}
+
+export async function fetchFundDetails(schemeCode: string): Promise<FundResponse> {
+  return fetchWithTimeout<FundResponse>(`${env.MFAPI_BASE_URL}/${schemeCode}`);
+}
+
+export async function fetchHistoricalNav(
+  schemeCode: string,
+  startDate?: string,
+  endDate?: string
+): Promise<FundResponse> {
+  const params = new URLSearchParams();
+  if (startDate) params.append('start', startDate);
+  if (endDate) params.append('end', endDate);
+  const url = params.size ? `${env.MFAPI_BASE_URL}/${schemeCode}?${params.toString()}` : `${env.MFAPI_BASE_URL}/${schemeCode}`;
+  return fetchWithTimeout<FundResponse>(url);
+}
+
 function normalizeFund(item: RawFundListItem): FundListItem {
   return {
     schemeCode: item.schemeCode,

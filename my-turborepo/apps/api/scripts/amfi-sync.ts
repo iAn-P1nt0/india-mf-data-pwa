@@ -1,12 +1,14 @@
 import { createWriteStream } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 
 import prisma from '../src/lib/prisma';
 import '../src/config/env';
+import { parseAmfiFile, upsertNavBatch } from '../src/services/amfi';
 
 const AMFI_URL = 'https://www.amfiindia.com/spages/NAVAll.txt';
+const BATCH_SIZE = 1000;
 
 async function downloadAmfiFile(destination: string) {
   await mkdir(path.dirname(destination), { recursive: true });
@@ -19,8 +21,25 @@ async function downloadAmfiFile(destination: string) {
 }
 
 async function parseAndUpsert(filePath: string) {
-  // TODO: implement parser that chunks records and upserts via prisma.navHistory.createMany
-  console.log(`Placeholder – parse ${filePath} and upsert into PostgreSQL`);
+  const batch = [] as Parameters<typeof upsertNavBatch>[0];
+  let count = 0;
+
+  for await (const record of parseAmfiFile(filePath)) {
+    batch.push(record);
+    if (batch.length >= BATCH_SIZE) {
+      await upsertNavBatch(batch);
+      count += batch.length;
+      batch.length = 0;
+      console.log(`Upserted ${count} NAV rows so far`);
+    }
+  }
+
+  if (batch.length) {
+    await upsertNavBatch(batch);
+    count += batch.length;
+  }
+
+  console.log(`AMFI sync inserted/updated ${count} NAV rows`);
 }
 
 async function main() {
@@ -29,6 +48,7 @@ async function main() {
   await downloadAmfiFile(tempFile);
   console.log('Download complete, beginning parse');
   await parseAndUpsert(tempFile);
+  await rm(tempFile, { force: true });
   console.log('AMFI sync completed');
 }
 
