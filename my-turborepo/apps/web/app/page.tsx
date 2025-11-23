@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import styles from "./page.module.css";
 import { useFundPreview } from "@/hooks/useFundPreview";
@@ -48,8 +48,18 @@ export default function Home() {
   const { funds, isLoading, error, fetchedAt, disclaimer, source, usedCacheFallback } = useFundPreview(6);
   const fundList = funds.length ? funds : SAMPLE_FUNDS;
   const spotlightFund = fundList[0];
-  const startDate = useMemo(() => toIsoDate(daysAgo(30)), []);
-  const endDate = useMemo(() => toIsoDate(new Date()), []);
+
+  // Use useState with lazy initializer to ensure consistent dates across SSR and client hydration
+  const [dateRange] = useState(() => {
+    const end = new Date();
+    const start = daysAgo(30);
+    return {
+      startDate: toIsoDate(start),
+      endDate: toIsoDate(end)
+    };
+  });
+
+  const { startDate, endDate } = dateRange;
   const {
     points: navPoints,
     isLoading: navLoading,
