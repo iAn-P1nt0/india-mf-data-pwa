@@ -77,6 +77,10 @@ npm run prisma:deploy --workspace=apps/api     # apply migrations (Render)
 2. Attach the existing Postgres instance and expose its connection string as `DATABASE_URL` (internal URL recommended).
 3. After the service builds, open a Render shell and run `DATABASE_URL=<render-url> npm run prisma:deploy --workspace=apps/api` to apply migrations.
 
+### Testing & automation
+
+- Backend suites run via `npm run test --workspace=apps/api` (Vitest + Supertest). Refer to the root `TESTING.md` for the evolving automation matrix covering AMFI fixtures, contract tests, and upcoming frontend/Playwright coverage.
+
 ## Next steps
 
 - Implement MFapi proxy routes + pagination.

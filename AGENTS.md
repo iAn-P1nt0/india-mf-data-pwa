@@ -3,7 +3,7 @@
 **Project**: India MF Data PWA (open-source, SEBI-compliant mutual fund intelligence)
 **Scope**: Turborepo monorepo with Express + Prisma API, Vite React PWA frontend, Render + Vercel deployment
 **Audience**: AI pair-programming agents (Copilot, Claude Code, Cursor, Replit, etc.)
-**Last Updated**: November 2025
+**Last Updated**: November 2025 (Backend MFapi validation + Vitest harness landing)
 
 ---
 
@@ -68,15 +68,15 @@ india-mf-data-pwa/
   - `Scheme`: schemeCode, schemeName, AMC metadata, categories, ISINs, JSON metadata.
   - `NavHistory`: schemeCode FK, navDate (Date), navValue (Decimal(12,4)), composites indexes for scheme/date.
 - **Data Sources**:
-  - `https://api.mfapi.in/mf` for scheme list + details.
-  - `https://www.amfiindia.com/spages/NAVAll.txt` for nightly NAV ingest (~9 PM IST).
+  - `https://api.mfapi.in/mf` for scheme list + details (now proxied with server-side query + date-window validation).
+  - `https://www.amfiindia.com/spages/NAVAll.txt` for nightly NAV ingest (~9 PM IST) — parser + batching are implemented, cron + cache eviction wiring pending.
 - **Caching**: Render Redis (Key-Value) with tag-based invalidation and TTL 15 minutes (MFapi) / 24 hours (AMFI snapshot metadata).
 - **Jobs**: Render cron or Airflow DAG to fetch AMFI file, stage into PostgreSQL, update `NavHistory`, and evict caches.
-- **API Surface** (initial):
+- **API Surface** (current):
   - `GET /api/health`
-  - `GET /api/funds?limit=&offset=&q=` (server-side fuzzy search)
-  - `GET /api/funds/:schemeCode`
-  - `GET /api/funds/:schemeCode/nav?start=&end=`
+  - `GET /api/funds?limit=&offset=&q=` (server-side fuzzy search + SEBI disclaimer metadata)
+  - `GET /api/funds/:schemeCode` (MFapi metadata proxy)
+  - `GET /api/funds/:schemeCode/nav?start=&end=` (YYYY-MM-DD validation + server-side filtering, returns 400 on bad ranges)
   - `GET /api/portfolio/sip-calculator` (server-validated formula)
   - `POST /api/jobs/nav-sync` (protected, internal use)
 
@@ -90,17 +90,16 @@ india-mf-data-pwa/
 ### Shared Tooling
 - Turborepo tasks: `dev`, `build`, `lint`, `test`, `format` using `turbo.json`.
 - ESLint, Prettier, and TypeScript project references to share config between apps.
-- Testing: Vitest + React Testing Library (frontend), Jest/Supertest (backend), plus contract tests across API surface.
+- Testing (see `TESTING.md` for evolving matrix): backend uses Vitest + Supertest (landed), AMFI scripts consume fixtures, frontend to adopt React Testing Library + Playwright PWA suite once shell is online, contract/API tests will guard MFapi + AMFI boundaries.
 
 ---
 
 ## 4. Critical Workflows
 
-1. **Data Sync Pipeline**
-   1. Cron job downloads AMFI NAVAll.txt.
-   2. Parser normalizes rows, deduplicates by schemeCode/navDate.
-   3. Bulk upsert into PostgreSQL via Prisma `createMany` with `skipDuplicates`.
-   4. Update Redis caches and emit `nav-history-updated` event (for future WebSocket/SSE streaming).
+1. **Data Sync Pipeline** (parser done, cron + cache invalidation pending)
+  1. Parser & batching script download AMFI NAVAll.txt, normalize, dedupe.
+  2. Bulk upsert into PostgreSQL via Prisma `createMany` with `skipDuplicates` (already implemented).
+  3. Next: wire Render cron (or Airflow DAG) to run nightly, invalidate Redis caches, emit `nav-history-updated` events.
 
 2. **Fund Search Flow**
    - Frontend dispatches `funds/searchRequested` with query.
@@ -141,10 +140,10 @@ india-mf-data-pwa/
   - `.env` required for `DATABASE_URL`, `REDIS_URL`, `PORT`, `MFAPI_BASE_URL` (optional override).
   - Validate schemeCode inputs (10-char alphanumeric) to prevent injection.
   - Sanitize AMFI text ingestion (strip HTML, handle invalid rows gracefully).
-- **Testing**:
-  - Backend endpoints require Supertest coverage (200 + failure paths).
-  - Data sync scripts need fixture tests against sample AMFI file.
-  - Frontend components must include accessibility checks (aria labels, tab order) and offline snapshot tests.
+- **Testing** (see `TESTING.md` for the living checklist):
+  - Backend endpoints must land with Vitest + Supertest suites (happy paths + MFapi failure simulation + validation errors).
+  - AMFI scripts need fixture-driven unit tests + contract tests to ensure parser compatibility when AMFI format shifts.
+  - Frontend work will pair React Testing Library unit tests with Playwright PWA smoke tests (offline, IndexedDB sync, SIP calculator parity) once the shell ships.
 
 ---
 
@@ -153,12 +152,12 @@ india-mf-data-pwa/
 | Phase | Focus | Key Deliverables |
 |-------|-------|------------------|
 | 0 | Repo + Turborepo scaffolding | Monorepo layout, lint/test tooling, env templates |
-| 1 | Backend MVP | Express server, Prisma schema, `/api/health`, `/api/funds` (MFapi proxy), Render deployment |
-| 1b | Data layer hardening | PostgreSQL migrations, AMFI ingest script, Redis caching |
-| 2 | Frontend MVP | Vite React shell, funds grid, service worker, Tailwind styling |
-| 2b | UX Enhancements | Search, fund details, charts, IndexedDB caching |
-| 3 | Portfolio & Tools | Client-side tracker, SIP calculator, disclaimers, exports |
-| 4 | Ops & Monitoring | Cron jobs, Render health checks, Lighthouse budget automation |
+| 1 | Backend MVP | Express server, Prisma schema, `/api/health`, `/api/funds` proxy (now with date validation) |
+| 1b | Data layer hardening | AMFI parser shipped (✅), next: cron automation, Redis caching, contract tests |
+| 2 | Frontend MVP | **Priority order:** PWA shell → IndexedDB caching adapters → SIP tooling UI; includes service worker + Tailwind baseline |
+| 2b | UX Enhancements | Search UX polish, charts, dark mode, advanced filters |
+| 3 | Portfolio & Tools | Client-side tracker, SIP calculator parity, exports |
+| 4 | Ops & Monitoring | Cron jobs live, Render health checks, Lighthouse & Playwright CI |
 
 Agents should keep issues and PRs aligned with these phases and update this doc when priorities shift.
 

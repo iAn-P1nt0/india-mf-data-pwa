@@ -45,23 +45,22 @@ The MVP must prove that high-quality, compliant tooling can ship quickly without
 
 ---
 
-## 4. Current Focus (Sprint 0 → Sprint 1)
+## 4. Current Focus (Sprint 1)
 
-| Track | Objectives |
-|-------|------------|
-| **Repo Bootstrap** | Turborepo scaffold, shared eslint/prettier configs, `pnpm` or `npm` workspace setup, `.env.example`. |
-| **Backend MVP** | Express 5 server, Prisma schema, `/api/health`, `/api/funds` proxy using MFapi, error normalization, Render deploy. |
-| **Data Jobs** | AMFI parser script + fixtures, Prisma migration `init`, doc on running `npx prisma migrate dev`. |
-| **Frontend Shell** | Vite React TS, Tailwind, dark/light theme toggle, funds list hitting API, placeholder disclaimers. |
-| **Ops** | `render.yaml`, instructions for manual migration, README update covering dev scripts + deployment. |
+| Track | Objectives + Status |
+|-------|---------------------|
+| **Backend MVP** | ✅ Express 5 + Prisma deployed, `/api/funds` & `/api/funds/:code/nav` now enforce YYYY-MM-DD validation + server-side date filtering, Vitest + Supertest harness merged. Next: redis-backed caching + upstream timeout tuning. |
+| **Data Jobs** | ✅ AMFI parser + batching script; 🚧 cron orchestration & cache invalidation, Render job wiring, contract tests to guard format drift. |
+| **Frontend Shell** | Upcoming sequence: 1) PWA shell with funds grid + disclaimers, 2) IndexedDB caching adapters (Dexie) for funds + NAV snapshots, 3) SIP tooling UI with parity check vs backend calc. |
+| **Ops / Tooling** | README + `TESTING.md` document scripts, Render deploy guide live; next add GitHub Actions to run Vitest + AMFI fixtures + future Playwright smoke tests. |
 
 ---
 
 ## 5. Tech Stack Snapshot
 
-- **Backend**: Node 20, Express 5, TypeScript, Prisma, PostgreSQL, Redis cache, Zod for validation, Nodemon/tsx for dev.
-- **Frontend**: Vite + React 18 + TS, Tailwind, React Router, Redux Toolkit or RTK Query, React Query (if needed), Recharts, Dexie (IndexedDB), `vite-plugin-pwa`.
-- **Tooling**: Turborepo, ESLint (flat config), Prettier, Vitest/Jest, Playwright (later), Render (API + Postgres + KV), Vercel (web), GitHub Actions for CI.
+- **Backend**: Node 20, Express 5, TypeScript, Prisma, PostgreSQL, Redis cache (pending), Zod validation, tz-aware date filters.
+- **Frontend**: Vite + React 18 + TS, Tailwind, React Router, Redux Toolkit/RTK Query, Dexie (IndexedDB), `vite-plugin-pwa`, Recharts.
+- **Tooling**: Turborepo, ESLint (flat), Prettier, **Vitest + Supertest** (backend), React Testing Library + Playwright (frontend plan), Render (API + Postgres + KV), Vercel (web), GitHub Actions CI.
 
 ---
 
@@ -76,9 +75,10 @@ The MVP must prove that high-quality, compliant tooling can ship quickly without
 
 ## 7. Backlog Highlights
 
-- Week 1: Redis cache, fund detail page with NAV chart, fuzzy search endpoint, IndexedDB portfolio skeleton.
-- Week 2: SIP calculator, nightly cron hooking AMFI, Lighthouse regression checks, responsiveness polish.
-- Futures: CAS PDF import (client-side), custom alerts (requires auth), comparative analytics, watchlists synced via Supabase.
+- **Immediate**: Wire Redis cache + MFapi throttling, add MFapi/AMFI contract tests, schedule Render cron for AMFI parser output (parser done, cron pending).
+- **Frontend sequence**: 1) PWA shell + funds grid + disclaimers, 2) IndexedDB caching (Dexie) for funds/NAV snapshots, 3) SIP tooling UI with parity checks against backend formula.
+- **Testing automation**: Land contract/API suites (Vitest) per endpoint, add AMFI fixture regression tests, prep Playwright PWA smoke suite (online/offline, IndexedDB sync) once shell ships.
+- **Futures**: CAS PDF import (client-side), alerts (requires auth), comparative analytics, watchlists via Supabase.
 
 ---
 
@@ -99,7 +99,7 @@ The MVP must prove that high-quality, compliant tooling can ship quickly without
 - `/api/funds` returns JSON (first 10 funds) with cache headers + source metadata.
 - Frontend lists funds, handles loading/error states, and renders disclaimers.
 - `render.yaml` provisions API service + PostgreSQL database; README documents deploy steps.
-- Tests: Backend unit (services), integration (routes), frontend component tests for list + offline banner.
+- Tests: Backend Vitest + Supertest suites (services + routes), AMFI fixture coverage, frontend RTL + future Playwright offline banner tests; see `TESTING.md` for the authoritative list.
 
 ---
 

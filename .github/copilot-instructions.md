@@ -2,14 +2,14 @@
 # copilot-instructions.md - GitHub Copilot Guardrails for India MF Data PWA
 
 **Project**: India Mutual Funds Data PWA
-**Stack**: Turborepo, Node 20, Express 5, Prisma/PostgreSQL, Vite React TS, Tailwind, Redux Toolkit, Dexie, Render, Vercel
+**Stack**: Turborepo, Node 20, Express 5, Prisma/PostgreSQL, Vitest + Supertest, Vite React TS, Tailwind, Redux Toolkit, Dexie, Render, Vercel
 **Goal**: Offline-first, SEBI-compliant mutual fund intelligence platform
 
 ---
 
 ## Context Recap
 
-- Backend (`apps/api`): Express 5 + TypeScript + Prisma. Provides `/api/health`, `/api/funds`, `/api/funds/:schemeCode`, NAV history endpoints, SIP calculator, and internal job hooks. Data from MFapi.in (real-time) and AMFI NAVAll.txt (nightly). Uses PostgreSQL (Render) + Redis cache.
+- Backend (`apps/api`): Express 5 + TypeScript + Prisma. Provides `/api/health`, `/api/funds`, `/api/funds/:schemeCode`, NAV history endpoints (now enforcing YYYY-MM-DD validation + server-side filtering), SIP calculator, and internal job hooks. Data from MFapi.in (real-time) and AMFI NAVAll.txt (nightly). Uses PostgreSQL (Render) + Redis cache (pending).
 - Frontend (`apps/web`): Vite React app with Tailwind, React Router, Redux Toolkit/RTK Query, React Query, Recharts, Dexie for IndexedDB, `vite-plugin-pwa` for service worker/offline shell.
 - Compliance: No predictive returns. Mandatory SEBI disclaimer on any performance/analytics view. Portfolio data remains client-side.
 
@@ -29,7 +29,7 @@ Key references: `Quick-Start-Guide.md`, `Technical-FAQ-Decisions.md`, `AGENTS.md
   - Use `Router` modules per resource. Mount under `/api`.
   - Validate all params with `zod` or custom guards (schemeCode max 10 chars, alphanumeric).
   - Wrap external fetches in retry/backoff (3 attempts, exponential). Add `User-Agent` header.
-  - Cache MFapi responses in Redis with structured keys (`mfapi:funds:page:0`). TTL 15 min.
+  - Cache MFapi responses in Redis with structured keys (`mfapi:funds:page:0`). TTL 15 min (todo once Redis provisioned).
   - Log structured JSON (level, msg, meta). Never log secrets or portfolio payloads.
   - Prisma queries should scope fields (`select`) to reduce payload size.
   - Use `createMany` + `skipDuplicates` for AMFI ingests; commit inside transaction.
@@ -94,9 +94,9 @@ Mutual fund investments are subject to market risks. Read all scheme related doc
 
 ## Testing Expectations
 
-- Backend: Jest or Vitest + Supertest per route (2xx, 4xx, 5xx). Mock MFapi with MSW or nock. Add fixtures for AMFI parser.
-- Frontend: Vitest + React Testing Library. Cover loading/error/empty states, offline banner, disclaimers. Use msw to stub API responses.
-- E2E (future): Playwright to validate offline PWA, install prompts, and search UX.
+- Backend: **Vitest + Supertest** per route (2xx, 4xx, 5xx). Mock MFapi via `fetch` stubs/MSW. Include validation + upstream failure cases. AMFI parser must have fixture tests.
+- Frontend: Vitest + React Testing Library for list/offline/disclaimer states; once the PWA shell ships, add Playwright smoke tests (online/offline, IndexedDB sync, SIP parity).
+- Contract/API: Add shared fixtures + Vitest suites covering MFapi + AMFI schema drift. See `TESTING.md` for the living automation matrix referenced by README.
 
 ---
 
@@ -146,6 +146,7 @@ Before finishing a change, Copilot should ensure:
 3. Tests or fixtures updated for new logic.
 4. Docs (`Quick-Start-Guide`, ADRs) patched if behavior changes.
 5. ESLint/Prettier + type checks pass locally (`turbo lint type-check`).
+6. Related automation notes updated in `TESTING.md` when adding/removing suites.
 
 Keep contributions consistent with `AGENTS.md` and `CLAUDE.md`. When uncertain, prefer conservative defaults and leave TODO comments referencing the source doc section.
 ````
