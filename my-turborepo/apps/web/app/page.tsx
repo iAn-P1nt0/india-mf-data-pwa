@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import styles from "./page.module.css";
 import { useFundPreview } from "@/hooks/useFundPreview";
@@ -49,15 +49,21 @@ export default function Home() {
   const fundList = funds.length ? funds : SAMPLE_FUNDS;
   const spotlightFund = fundList[0];
 
-  // Use useState with lazy initializer to ensure consistent dates across SSR and client hydration
-  const [dateRange] = useState(() => {
+  // Initialize with static dates to avoid hydration mismatch, then update on client
+  const [dateRange, setDateRange] = useState({
+    startDate: '2025-10-24',  // Will be overwritten client-side
+    endDate: '2025-11-23'      // Will be overwritten client-side
+  });
+
+  useEffect(() => {
+    // Calculate actual dates only on the client after hydration
     const end = new Date();
     const start = daysAgo(30);
-    return {
+    setDateRange({
       startDate: toIsoDate(start),
       endDate: toIsoDate(end)
-    };
-  });
+    });
+  }, []);
 
   const { startDate, endDate } = dateRange;
   const {
@@ -214,7 +220,7 @@ export default function Home() {
               </article>
             ))}
           </div>
-          <p className={styles.metaLine}>
+          <p className={styles.metaLine} suppressHydrationWarning>
             Source: {source ?? "MFapi.in"}
             {fetchedAt ? ` · Last refreshed ${fetchedAt}` : ""}
             {error ? ` · ${error}` : ""}
