@@ -37,7 +37,11 @@ self.addEventListener("message", (event) => {
     return;
   }
 
-  const urls = Array.isArray(event.data.payload) ? event.data.payload : [];
+  const urls = Array.isArray(event.data.payload)
+    ? event.data.payload
+    : event.data.url
+      ? [event.data.url]
+      : [];
 
   if (!urls.length) {
     return;

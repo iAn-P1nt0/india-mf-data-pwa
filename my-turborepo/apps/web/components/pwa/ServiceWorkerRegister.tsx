@@ -50,7 +50,7 @@ export function prefetchFunds(registration: ServiceWorkerRegistration, url: stri
   if (!url) {
     return;
   }
-  const payload = { type: "prefetch", url };
+  const payload = { type: "prefetch", payload: [url] };
   if (registration.active) {
     registration.active.postMessage(payload);
   } else if (registration.installing) {

@@ -7,7 +7,7 @@ type Point = {
 
 export function Sparkline({ points, width = 220, height = 80 }: { points: Point[]; width?: number; height?: number }) {
   if (!points.length) {
-    return <div aria-label="NAV sparkline" data-empty="true" />;
+    return <div role="img" aria-label="NAV sparkline" data-empty="true" />;
   }
   const normalized = normalize(points, width, height);
   const path = toPath(normalized);
