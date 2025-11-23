@@ -20,7 +20,7 @@ This guide describes the production-ready deployment plan for the India Mutual F
 | Vercel team/org | Team slug if using a shared account; leave blank for personal. | *(enter here)* |
 | Production domain | e.g., `mf-data.iap.dev`. Needed for DNS + HTTPS. | *(enter here)* |
 | Preview domain pattern | Usually `*.vercel.app`; confirm custom aliases if any. | *(enter here)* |
-| NEXT_PUBLIC_API_BASE_URL | Render API HTTPS base URL (ex: `https://india-mf-api.onrender.com`). | *(enter here)* |
+| NEXT_PUBLIC_API_BASE_URL | Render API HTTPS base URL (ex: `https://india-mf-data-pwa.onrender.com`). | *(enter here)* |
 | Render API service name | Needed for cold-start pings / monitoring. | *(enter here)* |
 | Contact email / on-call | Who receives Vercel/Renda alerts. | *(enter here)* |
 | Additional secrets | List any other env vars (analytics, Sentry DSN, etc.). | *(enter here)* |
@@ -39,7 +39,7 @@ Browser (PWA) ──HTTPS──► Vercel Edge/CDN ──SSR/API proxy──► 
 
 - **Static assets** (service worker, manifest, fonts) are cached at the CDN edge with immutable headers.
 - **Dynamic pages** (Next.js Server Components) leverage Vercel’s Node 18 runtime; React Query handles client hydration.
-- **API calls** go directly to Render (`https://india-mf-api.onrender.com`) via `NEXT_PUBLIC_API_BASE_URL`; CORS already enforced server-side.
+- **API calls** go directly to Render (`https://india-mf-data-pwa.onrender.com`) via `NEXT_PUBLIC_API_BASE_URL`; CORS already enforced server-side.
 
 ---
 
@@ -52,7 +52,7 @@ Browser (PWA) ──HTTPS──► Vercel Edge/CDN ──SSR/API proxy──► 
 | Prod    | `main`         | `mf-data.iap.dev` (custom) + fallback `mf-data.vercel.app` | Connect to Route53/Cloudflare DNS; enforce HTTPS, HTTP/3. |
 
 Secrets per stage:
-- `NEXT_PUBLIC_API_BASE_URL`: `https://india-mf-api.onrender.com` (prod) / Render staging URL (preview).
+- `NEXT_PUBLIC_API_BASE_URL`: `https://india-mf-data-pwa.onrender.com` (prod) / Render staging URL (preview).
 - `NEXT_TELEMETRY_DISABLED=1` to avoid noisy logs.
 - Render service env: `CORS_ALLOWED_ORIGINS=https://india-mf-data-pwa.vercel.app,https://*.vercel.app` so browser fetches are accepted.
 
