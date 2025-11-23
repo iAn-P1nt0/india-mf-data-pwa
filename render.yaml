@@ -15,6 +15,6 @@ services:
       npm start
     envVars:
       - key: DATABASE_URL
-        sync: false
+        value: "postgresql://ianpinto_admin:Y02GfxJ3pf7JmMW3G0zBmVsMVn8t0kJy@dpg-d4hcdr7diees73bf2qmg-a.oregon-postgres.render.com/imfd_pg_db"
       - key: PORT
         value: "10000"
