@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: india-mf-api
+    runtime: node
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    nodeVersion: 20.18.0
+    buildCommand: |
+      cd my-turborepo
+      npm install
+      npm run build --workspace=apps/api
+    startCommand: |
+      cd my-turborepo/apps/api
+      npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: "10000"
