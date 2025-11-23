@@ -21,14 +21,14 @@ describe('createOriginMatchers', () => {
   it('matches exact origins regardless of trailing slash', () => {
     const matchers = createOriginMatchers(['https://india-mf-data-pwa.vercel.app/']);
     expect(matchers).toHaveLength(1);
-    expect(matchers[0]('https://india-mf-data-pwa.vercel.app')).toBe(true);
+    expect(matchers[0]!('https://india-mf-data-pwa.vercel.app')).toBe(true);
   });
 
   it('supports wildcard subdomains', () => {
     const matchers = createOriginMatchers(['https://*.vercel.app']);
-    expect(matchers[0]('https://foo.vercel.app')).toBe(true);
-    expect(matchers[0]('https://bar.vercel.app')).toBe(true);
-    expect(matchers[0]('https://example.com')).toBe(false);
+    expect(matchers[0]!('https://foo.vercel.app')).toBe(true);
+    expect(matchers[0]!('https://bar.vercel.app')).toBe(true);
+    expect(matchers[0]!('https://example.com')).toBe(false);
   });
 
   it('ignores empty entries', () => {
@@ -38,6 +38,6 @@ describe('createOriginMatchers', () => {
 
   it('accepts the catch-all wildcard', () => {
     const matchers = createOriginMatchers(['*']);
-    expect(matchers[0]('https://anywhere.dev')).toBe(true);
+    expect(matchers[0]!('https://anywhere.dev')).toBe(true);
   });
 });
