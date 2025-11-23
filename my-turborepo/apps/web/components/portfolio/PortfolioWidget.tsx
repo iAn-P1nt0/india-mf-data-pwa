@@ -18,6 +18,8 @@ const EMPTY_FORM: DraftHolding = {
   updatedAt: 0
 };
 
+const NUMERIC_FIELDS = new Set<keyof DraftHolding>(["units", "avgNav"]);
+
 export function PortfolioWidget() {
   const { holdings, summary, addOrUpdate, remove, loading, error } = usePortfolioStore();
   const [form, setForm] = useState<DraftHolding>(EMPTY_FORM);
@@ -39,7 +41,7 @@ export function PortfolioWidget() {
     const { name, value } = event.target;
     setForm((prev) => ({
       ...prev,
-      [name]: name === "notes" ? value : Number(value)
+      [name]: NUMERIC_FIELDS.has(name as keyof DraftHolding) ? Number(value) : value
     }));
   }
 
