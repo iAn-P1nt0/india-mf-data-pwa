@@ -166,6 +166,7 @@ Agents should keep issues and PRs aligned with these phases and update this doc 
 ## 7. Reference Documents
 
 - `Quick-Start-Guide.md` (4-hour MVP instructions)
+- `DEPLOYMENT.md` (frontend deployment architecture + CI/CD guardrails)
 - `Technical-FAQ-Decisions.md` (decision matrix, ADRs, compliance FAQ)
 - `MF-Data-PWA-Blueprint.pdf` (full blueprint – consult offline viewer)
 - `README.md` (public-facing summary)

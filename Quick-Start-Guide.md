@@ -438,6 +438,8 @@ export default defineConfig({
 
 ## Phase 3: Deploy to Render (1 hour)
 
+> **Need a full architecture view?** See `DEPLOYMENT.md` for the end-to-end frontend deployment plan (Vercel topology, CI gates, rollback flow). Use that doc once the MVP skeleton from this guide is stable.
+
 ### Step 1: Create Render Configuration
 
 **Root `render.yaml`**:

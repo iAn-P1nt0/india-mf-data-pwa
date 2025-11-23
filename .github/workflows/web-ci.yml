@@ -1,0 +1,39 @@
+name: web-ci
+
+on:
+  pull_request:
+    paths:
+      - "my-turborepo/apps/web/**"
+      - "my-turborepo/packages/**"
+      - "my-turborepo/turbo.json"
+  push:
+    branches:
+      - main
+
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: my-turborepo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint web workspace
+        run: npm run lint --workspace web
+
+      - name: Type-check web workspace
+        run: npm run check-types --workspace web
+
+      - name: Run unit tests (Vitest)
+        run: npm run test --workspace web
