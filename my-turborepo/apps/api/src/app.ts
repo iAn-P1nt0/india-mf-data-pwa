@@ -8,8 +8,30 @@ import fundsRouter from './routes/funds';
 export function createApp() {
   const app = express();
 
+  const devOrigins = ['http://localhost:5173', 'http://localhost:4173', 'http://localhost:3000'];
+  const configuredOrigins = env.CORS_ALLOWED_ORIGINS
+    ? env.CORS_ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : [];
+
+  const allowedOrigins = env.NODE_ENV === 'development' ? [...devOrigins, ...configuredOrigins] : configuredOrigins;
+
   app.use(cors({
-    origin: env.NODE_ENV === 'development' ? ['http://localhost:5173', 'http://localhost:4173'] : undefined
+    origin: (origin, callback) => {
+      if (!allowedOrigins.length) {
+        callback(null, true);
+        return;
+      }
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
+    credentials: true
   }));
   app.use(express.json({ limit: '1mb' }));
 

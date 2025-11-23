@@ -3,10 +3,11 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().int().positive().default(3001),
+  PORT: z.coerce.number().int().min(0).default(3001),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   MFAPI_BASE_URL: z.string().url().default('https://api.mfapi.in/mf'),
   REDIS_URL: z.string().url().optional(),
+  CORS_ALLOWED_ORIGINS: z.string().optional(),
   APP_VERSION: z.string().optional()
 });
 
