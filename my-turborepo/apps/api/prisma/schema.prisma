@@ -1,0 +1,44 @@
+// Prisma schema for India MF Data PWA
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Scheme {
+  id             Int       @id @default(autoincrement())
+  schemeCode     String    @unique @db.VarChar(10)
+  schemeName     String    @db.VarChar(500)
+  amcName        String?   @db.VarChar(200)
+  schemeCategory String?   @db.VarChar(200)
+  schemeType     String?   @db.VarChar(100)
+  isinGrowth     String?   @db.VarChar(20)
+  isinDividend   String?   @db.VarChar(20)
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  navHistory NavHistory[]
+
+  @@index([schemeCode])
+  @@index([amcName])
+  @@map("schemes")
+}
+
+model NavHistory {
+  id         BigInt   @id @default(autoincrement())
+  schemeCode String   @db.VarChar(10)
+  navDate    DateTime @db.Date
+  navValue   Decimal  @db.Decimal(12, 4)
+  createdAt  DateTime @default(now())
+
+  scheme Scheme @relation(fields: [schemeCode], references: [schemeCode])
+
+  @@unique([schemeCode, navDate])
+  @@index([schemeCode, navDate(sort: Desc)])
+  @@map("nav_history")
+}
