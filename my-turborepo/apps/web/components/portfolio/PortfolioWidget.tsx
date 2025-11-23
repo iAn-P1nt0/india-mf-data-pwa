@@ -14,8 +14,7 @@ const EMPTY_FORM: DraftHolding = {
   schemeName: "",
   units: 0,
   avgNav: 0,
-  notes: "",
-  updatedAt: 0
+  notes: ""
 };
 
 const NUMERIC_FIELDS = new Set<keyof DraftHolding>(["units", "avgNav"]);
@@ -33,7 +32,7 @@ export function PortfolioWidget() {
       return;
     }
     setClientError(undefined);
-    await addOrUpdate({ ...form, updatedAt: Date.now() });
+    await addOrUpdate(form);
     setForm(EMPTY_FORM);
   }
 
