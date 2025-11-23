@@ -46,3 +46,21 @@ export type SipProjection = {
   maturityValue: number;
   gains: number;
 };
+
+export type PortfolioHolding = {
+  id?: number;
+  schemeCode: string;
+  schemeName: string;
+  units: number;
+  avgNav: number;
+  notes?: string;
+  updatedAt: number;
+  createdAt: number;
+};
+
+export type PortfolioSummary = {
+  totalHoldings: number;
+  totalUnits: number;
+  totalInvested: number;
+  averageCost: number;
+};

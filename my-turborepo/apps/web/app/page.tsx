@@ -7,8 +7,10 @@ import styles from "./page.module.css";
 import { useFundPreview } from "@/hooks/useFundPreview";
 import { useNavHistory } from "@/hooks/useNavHistory";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { usePortfolioStore } from "@/hooks/usePortfolioStore";
 import { API_BASE_URL, SEBI_DISCLAIMER } from "@/lib/config";
 import type { FundPreview } from "@/lib/types";
+import { Sparkline } from "@/components/charts/Sparkline";
 
 const SAMPLE_FUNDS: FundPreview[] = [
   {
@@ -55,6 +57,7 @@ export default function Home() {
   } = useNavHistory({ schemeCode: spotlightFund?.schemeCode, startDate, endDate });
 
   const navStats = useMemo(() => summarizeNav(navPoints), [navPoints]);
+  const { summary: portfolioSummary } = usePortfolioStore();
 
   const healthState = isLoading ? "Validating" : error ? "Degraded" : "Healthy";
 
@@ -99,8 +102,8 @@ export default function Home() {
             </div>
             <div className={styles.statCard}>
               <p className={styles.statLabel}>Next milestone</p>
-              <p className={styles.statValue}>SIP parity</p>
-              <p className={styles.statMeta}>Tooling shipped below</p>
+              <p className={styles.statValue}>Offline vault</p>
+              <p className={styles.statMeta}>{portfolioSummary.totalHoldings} schemes tracked</p>
             </div>
           </div>
         </header>
@@ -150,14 +153,17 @@ export default function Home() {
               </p>
               {navError && <p className={styles.metaLine}>NAV cache in use: {navError}</p>}
             </div>
-            <ul className={styles.navList}>
-              {(navPoints ?? []).slice(-6).reverse().map((point) => (
-                <li key={`${point.date}-${point.nav}`}>
-                  <span>{point.date}</span>
-                  <span className={styles.navValue}>{Number(point.nav).toFixed(3)}</span>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.sparkline}>
+              <Sparkline points={navPoints.map((point) => ({ date: point.date, nav: Number(point.nav) }))} />
+              <ul className={styles.navList}>
+                {(navPoints ?? []).slice(-6).reverse().map((point) => (
+                  <li key={`${point.date}-${point.nav}`}>
+                    <span>{point.date}</span>
+                    <span className={styles.navValue}>{Number(point.nav).toFixed(3)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
 
@@ -210,11 +216,40 @@ export default function Home() {
           <h2>Immediate engineering TODOs</h2>
           <ul>
             <li>✅ Backend NAV filter + Vitest harness are already merged.</li>
-            <li>✅ Dexie stores power `funds` + `navHistory` offline caches.</li>
+            <li>✅ Dexie stores power `funds`, `navHistory`, and now `portfolio` caches.</li>
             <li>✅ React Query orchestrates stale-while-revalidate flows.</li>
-            <li>🚧 Portfolio slice + Dexie wiring still pending.</li>
             <li>🚧 CAS import + alerts remain on the roadmap.</li>
+            <li>🚧 Background sync optimizations will mature the PWA story.</li>
           </ul>
+        </section>
+
+        <section className={styles.portfolioSection}>
+          <div>
+            <p className={styles.eyebrow}>Portfolio snapshot</p>
+            <h2>Client-side holdings stay private</h2>
+            <p>
+              {portfolioSummary.totalHoldings
+                ? `Tracking ${portfolioSummary.totalHoldings} scheme(s) · ₹${portfolioSummary.totalInvested.toFixed(2)} invested across ${portfolioSummary.totalUnits.toFixed(2)} units.`
+                : "Start capturing your SIPs with offline storage."}
+            </p>
+          </div>
+          <div className={styles.portfolioStats}>
+            <div>
+              <p>Total invested</p>
+              <strong>₹{portfolioSummary.totalInvested.toFixed(2)}</strong>
+            </div>
+            <div>
+              <p>Average cost</p>
+              <strong>₹{portfolioSummary.averageCost.toFixed(2)}</strong>
+            </div>
+            <div>
+              <p>Total units</p>
+              <strong>{portfolioSummary.totalUnits.toFixed(2)}</strong>
+            </div>
+          </div>
+          <Link href="/tools/portfolio" className={styles.sectionLink}>
+            Open offline vault
+          </Link>
         </section>
 
         <section className={styles.disclaimerCard}>

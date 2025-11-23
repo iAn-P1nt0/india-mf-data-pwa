@@ -1,6 +1,12 @@
 import Dexie, { Table } from "dexie";
 
-import type { FundPreview, FundsResponse, NavPoint } from "@/lib/types";
+import type {
+  FundPreview,
+  FundsResponse,
+  NavPoint,
+  PortfolioHolding,
+  PortfolioSummary
+} from "@/lib/types";
 
 export type FundRecord = FundPreview & { cachedAt: number };
 export type NavRecord = {
@@ -20,16 +26,18 @@ class FundsCacheDatabase extends Dexie {
   funds!: Table<FundRecord, string>;
   navHistory!: Table<NavRecord>;
   meta!: Table<MetaRecord, string>;
+  portfolio!: Table<PortfolioHolding>;
 }
 
 let dbInstance: FundsCacheDatabase | null = null;
 
 function createDatabase() {
   const db = new FundsCacheDatabase("india-mf-data-cache");
-  db.version(1).stores({
+  db.version(2).stores({
     funds: "&schemeCode, schemeName",
     navHistory: "++id, schemeCode, navDate, [schemeCode+navDate]",
-    meta: "&key"
+    meta: "&key",
+    portfolio: "++id,&schemeCode,schemeName"
   });
   return db;
 }
@@ -128,6 +136,60 @@ export async function readNavHistory(
     }
     return true;
   });
+}
+
+export async function listPortfolioHoldings() {
+  const db = getCacheDb();
+  if (!db) {
+    return [] as PortfolioHolding[];
+  }
+  return db.portfolio.orderBy("schemeName").toArray();
+}
+
+type HoldingInput = Omit<PortfolioHolding, "id" | "createdAt" | "updatedAt">;
+
+export async function upsertPortfolioHolding(input: HoldingInput) {
+  const db = getCacheDb();
+  if (!db) {
+    return undefined;
+  }
+  const now = Date.now();
+  const existing = await db.portfolio.where("schemeCode").equals(input.schemeCode).first();
+  if (existing?.id) {
+    await db.portfolio.update(existing.id, {
+      ...existing,
+      ...input,
+      updatedAt: now
+    });
+    return existing.id;
+  }
+  return db.portfolio.put({
+    ...input,
+    createdAt: now,
+    updatedAt: now
+  });
+}
+
+export async function deletePortfolioHolding(schemeCode: string) {
+  const db = getCacheDb();
+  if (!db) {
+    return 0;
+  }
+  return db.portfolio.where("schemeCode").equals(schemeCode).delete();
+}
+
+export function summarizeHoldings(holdings: PortfolioHolding[]): PortfolioSummary {
+  if (!holdings.length) {
+    return { totalHoldings: 0, totalUnits: 0, totalInvested: 0, averageCost: 0 };
+  }
+  const totalUnits = holdings.reduce((acc, holding) => acc + holding.units, 0);
+  const totalInvested = holdings.reduce((acc, holding) => acc + holding.units * holding.avgNav, 0);
+  return {
+    totalHoldings: holdings.length,
+    totalUnits,
+    totalInvested,
+    averageCost: totalUnits ? totalInvested / totalUnits : 0
+  };
 }
 
 function toIso(value: string) {

@@ -31,3 +31,33 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/")))
   );
 });
+
+self.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "prefetch") {
+    return;
+  }
+
+  const urls = Array.isArray(event.data.payload) ? event.data.payload : [];
+
+  if (!urls.length) {
+    return;
+  }
+
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await Promise.all(
+        urls.map(async (url) => {
+          try {
+            const response = await fetch(url, { mode: "cors" });
+            if (response && response.ok) {
+              await cache.put(url, response.clone());
+            }
+          } catch (error) {
+            console.warn("SW prefetch failed", url, error);
+          }
+        })
+      );
+    })()
+  );
+});

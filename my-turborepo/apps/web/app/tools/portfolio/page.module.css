@@ -1,0 +1,9 @@
+.page {
+  min-height: 100vh;
+  padding: 48px 16px 80px;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+}
