@@ -128,6 +128,10 @@ app.listen(PORT, () => {
 });
 ```
 
+**Available routes**:
+- `GET /api/health` – checks API + DB connectivity.
+- `GET /api/funds?limit=10&q=hdfc` – fetches list of funds from MFapi.in with optional fuzzy filter and returns SEBI disclaimer metadata.
+
 **`apps/api/package.json`** scripts:
 ```json
 {
@@ -212,7 +216,24 @@ PORT=3001
 npx prisma migrate dev --name init
 ```
 
+> Render free-tier roles cannot terminate other sessions, so `prisma migrate dev` may fail remotely. In that case, generate SQL locally with:
+> ```bash
+> DATABASE_URL="<render-url>" npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/<timestamp>_init/migration.sql
+> DATABASE_URL="<render-url>" npx prisma migrate deploy
+> ```
+> This produces a migration file you commit while applying it via `prisma migrate deploy`.
+
 ### Step 3: Create MFapi.in Service
+
+### Step 4: Scaffold AMFI sync script (optional while API stabilizes)
+
+Create `apps/api/scripts/amfi-sync.ts` with a placeholder downloader that fetches `NAVAll.txt`, saves it under `tmp/`, and prepares for Prisma upserts. Run it manually via:
+
+```bash
+npm run sync:amfi --workspace=apps/api
+```
+
+The parsing/upsert logic is a TODO until the API and database layer are fully validated.
 
 **`apps/api/src/services/MFApiService.ts`**:
 ```typescript

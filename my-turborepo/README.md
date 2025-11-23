@@ -63,9 +63,11 @@ npm run prisma:deploy --workspace=apps/api     # apply migrations (Render)
 
 - Express server split into `createApp` + bootstrap entry.
 - `GET /api/health` pings Prisma/PostgreSQL (`SELECT 1`).
+- `GET /api/funds` proxies MFapi.in with optional `?q=` filter and returns SEBI disclaimer metadata.
 - Prisma schema defines `Scheme` + `NavHistory` tables with indexes that match the blueprint.
 - `.env.example` documents all required secrets.
 - Turbo caches `dist/**` artifacts from the API build.
+- Placeholder AMFI sync script (`npm run sync:amfi --workspace=apps/api`) downloads NAVAll.txt for future ingestion work.
 
 ### Render deployment notes
 
@@ -76,8 +78,9 @@ npm run prisma:deploy --workspace=apps/api     # apply migrations (Render)
 ## Next steps
 
 - Implement MFapi proxy routes + pagination.
+- Complete MFapi proxy coverage (fund details, NAV history) and pagination.
 - Add Redis (Render key-value) for response caching — intentionally deferred until API + DB stabilise.
-- Add AMFI ingestion cron + scripts — deferred to keep scope focused on connectivity.
+- Implement AMFI ingestion parser + cron once script placeholder is validated.
 - Replace `apps/web` with the Vite PWA shell per Quick Start guide.
 
 Refer to `AGENTS.md`, `CLAUDE.md`, and `Technical-FAQ-Decisions.md` for the broader roadmap.
