@@ -22,6 +22,8 @@
     "recharts": "^3.5.0"
   },
   "devDependencies": {
+    "@axe-core/react": "^4.11.0",
+    "@playwright/test": "^1.56.1",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@testing-library/jest-dom": "^6.6.3",
@@ -31,6 +33,7 @@
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-react": "^4.3.4",
+    "axe-core": "^4.11.0",
     "eslint": "^9.39.1",
     "fake-indexeddb": "^5.0.2",
     "jsdom": "^27.2.0",

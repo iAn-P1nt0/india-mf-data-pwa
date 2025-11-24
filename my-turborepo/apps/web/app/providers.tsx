@@ -2,6 +2,8 @@
 
 import { ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ToastProvider } from "@/app/contexts/ToastContext";
+import ToastContainer from "@/components/notifications/ToastContainer";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(
@@ -17,5 +19,12 @@ export function Providers({ children }: { children: ReactNode }) {
       })
   );
 
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      <ToastProvider>
+        {children}
+        <ToastContainer />
+      </ToastProvider>
+    </QueryClientProvider>
+  );
 }
