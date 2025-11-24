@@ -6,6 +6,13 @@ import { FundSelector } from "@/components/funds/FundSelector";
 import { NAVChart } from "@/components/charts/NAVChart";
 import { DateRangePicker } from "@/components/common/DateRangePicker";
 import { PerformanceMetrics } from "@/components/metrics/PerformanceMetrics";
+import WatchlistButton from "@/components/funds/WatchlistButton";
+import WatchlistDrawer from "@/components/funds/WatchlistDrawer";
+import AdvancedFilters, { FilterOptions } from "@/components/funds/AdvancedFilters";
+import FundComparison from "@/components/funds/FundComparison";
+import { ChartSkeleton, MetricsSkeleton } from "@/components/common/Skeletons";
+import { exportToCSV } from "@/lib/export";
+import { useToast } from "@/app/contexts/ToastContext";
 import { useFundPreview } from "@/hooks/useFundPreview";
 import { useNavHistory } from "@/hooks/useNavHistory";
 import type { FundPreview } from "@/lib/types";
@@ -14,6 +21,7 @@ import styles from "./page.module.css";
 
 export default function FundsAnalysisPage() {
   const { funds, isLoading, disclaimer } = useFundPreview(100);
+  const { addToast } = useToast();
 
   const [selectedFund, setSelectedFund] = useState<FundPreview | null>(null);
   const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string }>(() => {
@@ -25,6 +33,9 @@ export default function FundsAnalysisPage() {
       endDate: end.toISOString().split("T")[0]!,
     };
   });
+  const [filters, setFilters] = useState<FilterOptions>({ categories: [] });
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
 
   // Set first fund as default when funds load
   useEffect(() => {
@@ -47,6 +58,34 @@ export default function FundsAnalysisPage() {
     setDateRange({ startDate, endDate });
   };
 
+  // Filter funds based on active filters
+  const filteredFunds = funds.filter(fund => {
+    // Category filter
+    if (filters.categories.length > 0 && !filters.categories.includes(fund.schemeCategory || '')) {
+      return false;
+    }
+    return true;
+  });
+
+  // Get unique categories for the filter component
+  const availableCategories = Array.from(new Set(funds.map(f => f.schemeCategory).filter(Boolean))) as string[];
+
+  // Handle export
+  const handleExportCSV = () => {
+    if (!selectedFund) {
+      addToast('Please select a fund first', 'warning');
+      return;
+    }
+    const exportData = [{
+      schemeCode: selectedFund.schemeCode.toString(),
+      schemeName: selectedFund.schemeName,
+      category: selectedFund.schemeCategory || 'N/A',
+      fundHouse: selectedFund.fundHouse || 'N/A'
+    }];
+    exportToCSV(exportData, `${selectedFund.schemeName}.csv`);
+    addToast('Fund data exported as CSV', 'success');
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -65,18 +104,49 @@ export default function FundsAnalysisPage() {
 
         <section className={styles.selectorSection}>
           <div className={styles.sectionHeader}>
-            <h2>Select Fund</h2>
-            <p className={styles.sectionHint}>
-              {funds.length} funds available • Search by name, code, or category
-            </p>
+            <div>
+              <h2>Select Fund</h2>
+              <p className={styles.sectionHint}>
+                {filteredFunds.length} funds available • Search by name, code, or category
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors"
+              >
+                {isFiltersOpen ? '✕ Close Filters' : '⚙️ Filters'}
+              </button>
+              <button
+                onClick={() => setIsWatchlistOpen(!isWatchlistOpen)}
+                className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 font-medium transition-colors"
+              >
+                ★ Watchlist
+              </button>
+            </div>
           </div>
+
+          {/* Advanced Filters */}
+          <AdvancedFilters
+            isOpen={isFiltersOpen}
+            onToggle={() => setIsFiltersOpen(!isFiltersOpen)}
+            availableCategories={availableCategories}
+            onFiltersChange={setFilters}
+          />
+
           <FundSelector
-            funds={funds}
+            funds={filteredFunds}
             selectedFund={selectedFund}
             onSelectFund={setSelectedFund}
             isLoading={isLoading}
           />
         </section>
+
+        {/* Watchlist Drawer */}
+        <WatchlistDrawer
+          isOpen={isWatchlistOpen}
+          onClose={() => setIsWatchlistOpen(false)}
+        />
 
         {selectedFund && (
           <>
@@ -106,6 +176,20 @@ export default function FundsAnalysisPage() {
                     )}
                   </div>
                 </div>
+                <div className="flex gap-2 mt-4">
+                  <WatchlistButton
+                    schemeCode={selectedFund.schemeCode.toString()}
+                    schemeName={selectedFund.schemeName}
+                    fundHouse={selectedFund.fundHouse || 'N/A'}
+                    schemeCategory={selectedFund.schemeCategory || 'N/A'}
+                  />
+                  <button
+                    onClick={handleExportCSV}
+                    className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-medium transition-colors"
+                  >
+                    📥 Export CSV
+                  </button>
+                </div>
               </div>
             </section>
 
@@ -132,14 +216,27 @@ export default function FundsAnalysisPage() {
                       : `${navPoints.length} data points`}
                 </p>
               </div>
-              <NAVChart points={navPoints.map((p) => ({ date: p.date, nav: Number(p.nav) }))} height={400} />
+              {navLoading ? (
+                <ChartSkeleton />
+              ) : (
+                <NAVChart points={navPoints.map((p) => ({ date: p.date, nav: Number(p.nav) }))} height={400} />
+              )}
             </section>
 
             <section className={styles.metricsSection}>
-              <PerformanceMetrics
-                navPoints={navPoints.map((p) => ({ date: p.date, nav: Number(p.nav) }))}
-                schemeName={selectedFund.schemeName}
-              />
+              {navLoading ? (
+                <MetricsSkeleton />
+              ) : (
+                <PerformanceMetrics
+                  navPoints={navPoints.map((p) => ({ date: p.date, nav: Number(p.nav) }))}
+                  schemeName={selectedFund.schemeName}
+                />
+              )}
+            </section>
+
+            {/* Fund Comparison Section */}
+            <section className="mt-8">
+              <FundComparison />
             </section>
           </>
         )}
