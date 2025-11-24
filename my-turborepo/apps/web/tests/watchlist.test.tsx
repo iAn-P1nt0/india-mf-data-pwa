@@ -6,6 +6,9 @@ import WatchlistButton from '@/components/funds/WatchlistButton';
 import WatchlistDrawer from '@/components/funds/WatchlistDrawer';
 import { ToastProvider } from '@/app/contexts/ToastContext';
 
+// Import needed for tests
+import React from 'react';
+
 // Mock IndexedDB
 vi.mock('@/lib/db', () => {
   const items = new Map();
@@ -165,17 +168,21 @@ describe('Watchlist Context and Components', () => {
 
   it('renders WatchlistDrawer when open', () => {
     const { rerender } = render(
-      <WatchlistProvider>
-        <WatchlistDrawer isOpen={false} onClose={() => {}} />
-      </WatchlistProvider>
+      <ToastProvider>
+        <WatchlistProvider>
+          <WatchlistDrawer isOpen={false} onClose={() => {}} />
+        </WatchlistProvider>
+      </ToastProvider>
     );
 
     expect(screen.queryByText('Watchlist')).not.toBeInTheDocument();
 
     rerender(
-      <WatchlistProvider>
-        <WatchlistDrawer isOpen={true} onClose={() => {}} />
-      </WatchlistProvider>
+      <ToastProvider>
+        <WatchlistProvider>
+          <WatchlistDrawer isOpen={true} onClose={() => {}} />
+        </WatchlistProvider>
+      </ToastProvider>
     );
 
     expect(screen.getByText('Watchlist')).toBeInTheDocument();
@@ -186,9 +193,11 @@ describe('Watchlist Context and Components', () => {
     const onClose = vi.fn();
 
     render(
-      <WatchlistProvider>
-        <WatchlistDrawer isOpen={true} onClose={onClose} />
-      </WatchlistProvider>
+      <ToastProvider>
+        <WatchlistProvider>
+          <WatchlistDrawer isOpen={true} onClose={onClose} />
+        </WatchlistProvider>
+      </ToastProvider>
     );
 
     const closeButton = screen.getByLabelText('Close watchlist');
@@ -202,9 +211,11 @@ describe('Watchlist Context and Components', () => {
     const onClose = vi.fn();
 
     const { container } = render(
-      <WatchlistProvider>
-        <WatchlistDrawer isOpen={true} onClose={onClose} />
-      </WatchlistProvider>
+      <ToastProvider>
+        <WatchlistProvider>
+          <WatchlistDrawer isOpen={true} onClose={onClose} />
+        </WatchlistProvider>
+      </ToastProvider>
     );
 
     const backdrop = container.querySelector('[role="presentation"]');
@@ -216,9 +227,11 @@ describe('Watchlist Context and Components', () => {
 
   it('shows empty state when no funds in watchlist', () => {
     render(
-      <WatchlistProvider>
-        <WatchlistDrawer isOpen={true} onClose={() => {}} />
-      </WatchlistProvider>
+      <ToastProvider>
+        <WatchlistProvider>
+          <WatchlistDrawer isOpen={true} onClose={() => {}} />
+        </WatchlistProvider>
+      </ToastProvider>
     );
 
     expect(screen.getByText('No funds in watchlist')).toBeInTheDocument();
