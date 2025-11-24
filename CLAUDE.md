@@ -21,18 +21,56 @@ The MVP must prove that high-quality, compliant tooling can ship quickly without
 
 ## 2. Personas & Journeys
 
-1. **Ananya (Retail Investor)**
-   - Wants to compare ELSS funds quickly before tax season
-   - Opens PWA on mobile, searches "HDFC Tax Saver", views NAV chart, downloads CSV
-   - Needs clarity that results are historical, not advice
+### Primary Personas
 
-2. **Ravi (DIY Portfolio Nerd)**
-   - Tracks 12 SIPs; frustrated when cold starts block his nightly ritual
-   - Expects offline load and local storage of holdings, plus export/import safety net
+1. **Ananya (Retail Investor, Age 28)**
+   - **Goal**: Compare ELSS funds quickly before tax season deadline
+   - **Pain Points**: Scattered data across multiple websites, no offline access, confusing metrics
+   - **Journey**:
+     1. Opens PWA on mobile during commute (offline capability kicks in)
+     2. Searches "HDFC Tax Saver" using smart search with autocomplete
+     3. Adds 3 ELSS funds to comparison view (side-by-side metrics)
+     4. Views interactive NAV charts with 3-year history
+     5. Exports comparison report as PDF for spouse review
+     6. Stars favorite fund for later tracking
+   - **Success Metrics**: Decision made in <10 minutes, exports report, returns next month
 
-3. **Neha (Developer / Researcher)**
-   - Wants open APIs for a weekend backtest script
-   - Hits `/api/funds` with rate limits documented; expects schema stability
+2. **Ravi (DIY Portfolio Enthusiast, Age 42)**
+   - **Goal**: Track 12 SIPs meticulously and optimize returns
+   - **Pain Points**: Cold starts blocking nightly check-ins, no rebalancing guidance, manual calculations
+   - **Journey**:
+     1. Opens PWA at 10 PM (expects instant load via service worker)
+     2. Portfolio dashboard shows all holdings with live valuations
+     3. Reviews portfolio rebalancing suggestions (drift detection)
+     4. Uses tax harvesting calculator for LTCG optimization
+     5. Sets up goal-based tracker for retirement corpus (₹2 Cr in 15Y)
+     6. Exports portfolio snapshot as CSV for annual tax filing
+   - **Success Metrics**: <2s load time offline, portfolio insights surfaced, tax savings identified
+
+3. **Neha (Developer / Researcher, Age 31)**
+   - **Goal**: Build backtest engine using public MF data APIs
+   - **Pain Points**: Rate limits unclear, schema changes break scripts, no bulk export
+   - **Journey**:
+     1. Reads API documentation on `/api-explorer` page
+     2. Tests `/api/funds` endpoint with pagination and filtering
+     3. Downloads bulk NAV history via CSV export (batched by category)
+     4. Integrates API into Python backtest script with retry logic
+     5. Subscribes to schema change notifications (future)
+   - **Success Metrics**: 100+ API calls/day without throttling, stable schema, CSV exports work
+
+### Secondary Personas
+
+4. **Priya (First-Time Investor, Age 24)**
+   - **Need**: Guided onboarding to understand mutual fund basics
+   - **Journey**: Interactive tutorial → Set financial goal → Recommended starter funds → Sample SIP calculation
+
+5. **Karthik (Tax Consultant, Age 48)**
+   - **Need**: Quickly assess client portfolio tax implications
+   - **Journey**: Import CAS file → Tax harvesting analysis → LTCG/STCG breakdown → Generate client report
+
+6. **Meera (Financial Blogger, Age 35)**
+   - **Need**: Research fund trends for blog content
+   - **Journey**: Category heatmap → Identify trending sectors → Export charts for blog → Embed API data widgets
 
 ---
 
@@ -45,14 +83,52 @@ The MVP must prove that high-quality, compliant tooling can ship quickly without
 
 ---
 
-## 4. Current Focus (Sprint 1)
+## 4. Current Focus & Priorities
 
-| Track | Objectives + Status |
-|-------|---------------------|
-| **Backend MVP** | ✅ Express 5 + Prisma deployed, `/api/funds` & `/api/funds/:code/nav` now enforce YYYY-MM-DD validation + server-side date filtering, Vitest + Supertest harness merged. Next: redis-backed caching + upstream timeout tuning. |
-| **Data Jobs** | ✅ AMFI parser + batching script; 🚧 cron orchestration & cache invalidation, Render job wiring, contract tests to guard format drift. |
-| **Frontend Shell** | Upcoming sequence: 1) PWA shell with funds grid + disclaimers, 2) IndexedDB caching adapters (Dexie) for funds + NAV snapshots, 3) SIP tooling UI with parity check vs backend calc. |
-| **Ops / Tooling** | README + `TESTING.md` document scripts, Render deploy guide live; next add GitHub Actions to run Vitest + AMFI fixtures + future Playwright smoke tests. |
+### Completed Milestones ✅
+
+| Track | Status |
+|-------|--------|
+| **Backend MVP** | Express 5 + Prisma deployed, `/api/funds` & `/api/funds/:code/nav` with YYYY-MM-DD validation, Vitest + Supertest harness merged |
+| **Frontend Shell** | PWA shell live with funds grid, NAV charts, disclaimers, IndexedDB (Dexie) caching, SIP calculator with backend parity |
+| **Data Jobs** | AMFI parser + batching script production-ready |
+| **Offline Support** | Service worker + manifest + cache-first strategy operational |
+
+### Current Sprint: UI/UX Phase 1 (Dec 2025) 🚧
+
+**Goal**: Elevate user experience to match best-in-class fintech apps while maintaining SEBI compliance
+
+**Priority 1 - Comparison & Discovery**
+- [ ] **Fund Comparison Tool**: Side-by-side view for up to 3 funds with metrics diff
+- [ ] **Advanced Filtering**: Multi-select categories, AUM range, expense ratio filters
+- [ ] **Smart Search**: Autocomplete, fuzzy matching, recent searches, category suggestions
+- [ ] **Watchlist/Favorites**: Star funds, quick access drawer, sync to IndexedDB
+
+**Priority 2 - Feedback & Polish**
+- [ ] **Loading Skeletons**: Replace spinners with content-aware skeletons (cards, charts, tables)
+- [ ] **Toast Notifications**: Success/error/info toasts for user actions (saved, exported, failed)
+- [ ] **Empty States**: Illustrative placeholders for no results, no data scenarios
+- [ ] **Error Boundaries**: Graceful error handling with recovery actions
+
+**Priority 3 - Export & Sharing**
+- [ ] **CSV Export**: Portfolio holdings, fund lists, NAV history with custom date ranges
+- [ ] **PDF Reports**: Fund analysis report with charts, metrics, disclaimers
+- [ ] **Share Links**: Deep links to specific fund/comparison views
+
+### Next Sprint: UI/UX Phase 2 (Jan 2026)
+
+**Advanced Visualizations**
+- Category performance heatmap (color-coded by 1Y/3Y/5Y returns)
+- Multi-fund NAV overlay charts with normalized view option
+- Risk-return scatter plot (volatility vs returns)
+- SIP growth curve with contributions vs returns breakdown
+- Historical returns bar chart (1Y/3Y/5Y comparisons)
+
+### Backend Enhancements (Parallel Track)
+- Redis caching layer (15min TTL for MFapi, 24h for AMFI metadata)
+- Render cron job for nightly AMFI sync (9 PM IST)
+- Contract tests for MFapi + AMFI format stability
+- Upstream timeout tuning + retry backoff optimization
 
 ---
 
@@ -73,12 +149,78 @@ The MVP must prove that high-quality, compliant tooling can ship quickly without
 
 ---
 
-## 7. Backlog Highlights
+## 7. Comprehensive Feature Backlog
 
-- **Immediate**: Wire Redis cache + MFapi throttling, add MFapi/AMFI contract tests, schedule Render cron for AMFI parser output (parser done, cron pending).
-- **Frontend sequence**: 1) PWA shell + funds grid + disclaimers, 2) IndexedDB caching (Dexie) for funds/NAV snapshots, 3) SIP tooling UI with parity checks against backend formula.
-- **Testing automation**: Land contract/API suites (Vitest) per endpoint, add AMFI fixture regression tests, prep Playwright PWA smoke suite (online/offline, IndexedDB sync) once shell ships.
-- **Futures**: CAS PDF import (client-side), alerts (requires auth), comparative analytics, watchlists via Supabase.
+### Immediate (Dec 2025)
+**UI/UX Phase 1**
+- Fund comparison tool (up to 3 funds)
+- Advanced filtering (categories, AUM, returns)
+- Smart search with autocomplete
+- Watchlist/favorites with IndexedDB sync
+- Loading skeletons for all async content
+- Toast notification system
+- CSV/PDF export capabilities
+
+**Backend Hardening**
+- Redis cache layer (MFapi + AMFI)
+- Render cron for nightly AMFI sync
+- Contract tests for upstream API stability
+- Upstream timeout + retry optimization
+
+### Short-Term (Q1 2026)
+**UI/UX Phase 2 - Visualizations**
+- Category performance heatmap
+- Multi-fund comparison charts
+- Risk-return scatter plots
+- SIP projection visualization
+- Historical returns bar charts
+
+**UI/UX Phase 3 - Accessibility & Mobile**
+- Keyboard navigation shortcuts (`Ctrl+K` search, etc.)
+- Enhanced ARIA support for screen readers
+- Mobile gesture support (swipe, pull-to-refresh)
+- Responsive touch optimizations
+
+**Testing Infrastructure**
+- Playwright PWA smoke suite (offline/online)
+- Visual regression tests (Percy/Chromatic)
+- Lighthouse CI integration
+- Accessibility audit automation (axe-core)
+
+### Mid-Term (Q2 2026)
+**UI/UX Phase 4 - Power User Features**
+- Goal-based financial planner
+- Portfolio rebalancing suggestions
+- Tax harvesting calculator (LTCG/STCG)
+- Advanced fund screener (Sharpe, alpha, beta)
+- Benchmark comparison (Nifty/Sensex overlay)
+
+**Data Enhancements**
+- CAS file import (CAMS/Karvy parsing)
+- Historical benchmark data ingestion
+- Fund manager change tracking
+- Scheme merge/split handling
+
+### Long-Term (Q3-Q4 2026)
+**UI/UX Phase 5 - Onboarding & Education**
+- Interactive first-time user tour
+- Contextual help tooltips
+- Educational content library
+- Video tutorials integration
+- Feature announcements system
+
+**Community Features** (Auth Required)
+- User-generated fund reviews (moderated)
+- Investment goal templates sharing
+- Anonymous portfolio benchmarking
+- Discussion forums (SEBI-compliant)
+
+**Advanced Analytics**
+- AI-powered fund recommendations (explainable)
+- Sentiment analysis from SEBI filings
+- Correlation matrix for diversification
+- Monte Carlo simulation for SIPs
+- Real-time alerts (price targets, rebalancing)
 
 ---
 
