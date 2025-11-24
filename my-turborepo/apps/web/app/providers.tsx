@@ -5,6 +5,24 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastProvider } from "@/app/contexts/ToastContext";
 import { WatchlistProvider } from "@/app/contexts/WatchlistContext";
 import ToastContainer from "@/components/notifications/ToastContainer";
+import KeyboardCommandPalette from "@/components/navigation/KeyboardCommandPalette";
+import { useGlobalKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+
+function ProvidersInner({ children }: { children: ReactNode }) {
+  useGlobalKeyboardShortcuts();
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  return (
+    <>
+      {children}
+      <ToastContainer />
+      <KeyboardCommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
+    </>
+  );
+}
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(
@@ -24,8 +42,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={client}>
       <ToastProvider>
         <WatchlistProvider>
-          {children}
-          <ToastContainer />
+          <ProvidersInner>{children}</ProvidersInner>
         </WatchlistProvider>
       </ToastProvider>
     </QueryClientProvider>
