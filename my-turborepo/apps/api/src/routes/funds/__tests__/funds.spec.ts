@@ -155,4 +155,36 @@ describe('Funds routes', () => {
     expect(response.body.navHistory.data).toHaveLength(1);
     expect(response.body.navHistory.data[0].date).toBe('15-01-2024');
   });
+
+  it('compares up to 3 funds with POST /api/funds/compare', async () => {
+    const response = await request(buildApp()).post('/api/funds/compare').send({
+      schemeCodes: ['119551']
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.funds).toHaveLength(1);
+    expect(response.body.funds[0].meta.scheme_code).toBe('119551');
+    expect(response.body.disclaimer).toContain('Mutual fund investments are subject to market risks');
+  });
+
+  it('rejects empty schemeCodes array', async () => {
+    const response = await request(buildApp()).post('/api/funds/compare').send({
+      schemeCodes: []
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/must be an array of 1-3 scheme codes/);
+  });
+
+  it('rejects more than 3 scheme codes', async () => {
+    const response = await request(buildApp()).post('/api/funds/compare').send({
+      schemeCodes: ['119551', '119552', '119553', '119554']
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/must be an array of 1-3 scheme codes/);
+  });
 });

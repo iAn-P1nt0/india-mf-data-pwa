@@ -101,4 +101,37 @@ router.get('/:schemeCode/nav', async (req, res) => {
   }
 });
 
+router.post('/compare', async (req, res) => {
+  const schemeCodes = req.body.schemeCodes as string[] | undefined;
+
+  if (!Array.isArray(schemeCodes) || schemeCodes.length === 0 || schemeCodes.length > 3) {
+    return res.status(400).json({
+      success: false,
+      error: 'schemeCodes must be an array of 1-3 scheme codes',
+      source: 'india-mf-data-api'
+    });
+  }
+
+  try {
+    const funds = await Promise.all(
+      schemeCodes.map((code) => fetchFundDetails(code))
+    );
+
+    res.json({
+      success: true,
+      funds,
+      count: funds.length,
+      disclaimer: sebiDisclaimer,
+      source: 'MFapi.in',
+      fetchedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch fund details for comparison',
+      source: 'MFapi.in'
+    });
+  }
+});
+
 export default router;
