@@ -11,18 +11,18 @@ import React from 'react';
 
 // Mock IndexedDB
 vi.mock('@/lib/db', () => {
-  const items = new Map();
+  const items = new Map<number, any>();
 
   return {
     db: {
       watchlist: {
         toArray: () => Promise.resolve(Array.from(items.values())),
-        add: (item) => {
+        add: (item: any) => {
           const id = Math.random();
           items.set(id, { ...item, id });
           return Promise.resolve(id);
         },
-        delete: (id) => {
+        delete: (id: number) => {
           items.delete(id);
           return Promise.resolve(1);
         },
