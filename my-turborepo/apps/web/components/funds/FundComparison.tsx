@@ -3,7 +3,6 @@
 import React, { useState, useCallback } from 'react';
 import { useCompareFunds } from '@/hooks/useCompareFunds';
 import { useToast } from '@/app/contexts/ToastContext';
-import FundSelector from './FundSelector';
 import { ChartSkeleton, MetricsSkeleton } from '@/components/common/Skeletons';
 
 interface SelectedFund {
@@ -13,28 +12,37 @@ interface SelectedFund {
 
 export default function FundComparison() {
   const [selectedFunds, setSelectedFunds] = useState<SelectedFund[]>([]);
+  const [schemeInput, setSchemeInput] = useState('');
   const { addToast } = useToast();
 
   const schemeCodes = selectedFunds.map((f) => f.schemeCode);
   const { data, isLoading, error } = useCompareFunds(schemeCodes);
 
-  const handleAddFund = useCallback(
-    (fund: { schemeCode: string; schemeName: string }) => {
-      if (selectedFunds.some((f) => f.schemeCode === fund.schemeCode)) {
-        addToast('Fund already selected', 'warning');
-        return;
-      }
+  const handleAddFund = useCallback(() => {
+    if (!schemeInput.trim()) {
+      addToast('Please enter a scheme code or name', 'warning');
+      return;
+    }
 
-      if (selectedFunds.length >= 3) {
-        addToast('Maximum 3 funds can be compared', 'warning');
-        return;
-      }
+    if (selectedFunds.some((f) => f.schemeCode === schemeInput)) {
+      addToast('Fund already selected', 'warning');
+      return;
+    }
 
-      setSelectedFunds((prev) => [...prev, fund]);
-      addToast(`${fund.schemeName} added to comparison`, 'success');
-    },
-    [selectedFunds, addToast]
-  );
+    if (selectedFunds.length >= 3) {
+      addToast('Maximum 3 funds can be compared', 'warning');
+      return;
+    }
+
+    const fund: SelectedFund = {
+      schemeCode: schemeInput,
+      schemeName: schemeInput
+    };
+
+    setSelectedFunds((prev) => [...prev, fund]);
+    addToast(`Fund ${schemeInput} added to comparison`, 'success');
+    setSchemeInput('');
+  }, [selectedFunds, schemeInput, addToast]);
 
   const handleRemoveFund = useCallback((schemeCode: string) => {
     setSelectedFunds((prev) =>
@@ -53,11 +61,27 @@ export default function FundComparison() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-2xl font-bold mb-4">Compare Funds</h2>
         <p className="text-gray-600 mb-4">
-          Select up to 3 funds to compare side-by-side metrics and performance
+          Enter scheme codes (e.g., 119551) to compare up to 3 funds side-by-side
         </p>
 
         <div className="space-y-4">
-          <FundSelector onSelectFund={handleAddFund} />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter scheme code or fund name"
+              value={schemeInput}
+              onChange={(e) => setSchemeInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddFund()}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              onClick={handleAddFund}
+              disabled={selectedFunds.length >= 3}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-medium transition-colors"
+            >
+              Add
+            </button>
+          </div>
 
           {selectedFunds.length > 0 && (
             <div className="space-y-3">

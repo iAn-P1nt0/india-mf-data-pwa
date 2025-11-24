@@ -1,17 +1,13 @@
 import Papa from 'papaparse';
 
 export interface ExportData {
-  schemeName: string;
-  fundHouse: string;
-  schemeCategory: string;
-  schemeCode: string;
   [key: string]: string | number | undefined;
 }
 
 /**
  * Export data to CSV format
  */
-export function exportToCSV(data: ExportData[], filename: string = 'export.csv') {
+export function exportToCSV(data: ExportData[] | Record<string, string>[], filename: string = 'export.csv') {
   const csv = Papa.unparse(data);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   downloadFile(blob, filename);
@@ -289,5 +285,5 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#039;'
   };
-  return text.replace(/[&<>"']/g, (char) => map[char]);
+  return text.replace(/[&<>"']/g, (char) => map[char] || char);
 }
