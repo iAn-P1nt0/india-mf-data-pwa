@@ -15,8 +15,11 @@
   "dependencies": {
     "@repo/ui": "*",
     "@tanstack/react-query": "^5.59.0",
+    "@types/lodash": "^4.17.21",
+    "date-fns": "^4.1.0",
     "dexie": "^4.0.8",
     "html2pdf.js": "^0.12.1",
+    "lodash": "^4.17.21",
     "next": "^16.0.1",
     "papaparse": "^5.5.3",
     "react": "^19.2.0",
