@@ -158,17 +158,236 @@ india-mf-data-pwa/
 | 2b | UX Enhancements | Search UX polish, charts, dark mode, advanced filters |
 | 3 | Portfolio & Tools | Client-side tracker, SIP calculator parity, exports |
 | 4 | Ops & Monitoring | Cron jobs live, Render health checks, Lighthouse & Playwright CI |
+| **5** | **UI/UX Phase 1** | **Advanced filtering, fund comparison, watchlist, loading skeletons, toast notifications, export (CSV/PDF)** |
+| **6** | **UI/UX Phase 2** | **Category heatmaps, comparative charts, returns distribution, SIP projection charts** |
+| **7** | **UI/UX Phase 3** | **Keyboard shortcuts, enhanced ARIA, mobile gestures, responsive optimizations** |
+| **8** | **UI/UX Phase 4** | **Goal-based planner, portfolio rebalancing, tax calculators, fund screener, benchmark comparison** |
+| **9** | **UI/UX Phase 5** | **Interactive onboarding, contextual help, educational content, feature announcements** |
 
 Agents should keep issues and PRs aligned with these phases and update this doc when priorities shift.
 
 ---
 
-## 7. Reference Documents
+## 7. UI/UX Component Patterns & Best Practices
+
+### Design System Principles
+
+**Color System**
+- Primary: `#2563eb` (blue-600) – CTAs, links, active states
+- Success: `#10b981` (emerald-500) – positive returns, success states
+- Warning: `#f59e0b` (amber-500) – disclaimers, cautionary info
+- Error: `#ef4444` (red-500) – losses, error states
+- Neutral: Gray scale (50-900) – text, borders, backgrounds
+
+**Typography Scale**
+- Hero: `clamp(2rem, 4vw, 2.75rem)` – landing page headlines
+- H1: `2rem` (32px) – page titles
+- H2: `1.5rem` (24px) – section headers
+- H3: `1.25rem` (20px) – card titles
+- Body: `1rem` (16px) – default text
+- Small: `0.875rem` (14px) – metadata, captions
+- Tiny: `0.75rem` (12px) – disclaimers, labels
+
+**Spacing Scale (8px base)**
+- xs: `4px`, sm: `8px`, md: `16px`, lg: `24px`, xl: `32px`, 2xl: `48px`, 3xl: `64px`
+
+### Component Guidelines
+
+#### 1. Loading States
+**Skeleton Loaders** (preferred over spinners for content)
+```tsx
+// Pattern: Use semantic HTML + aria-busy
+<div className={styles.skeleton} aria-busy="true" aria-label="Loading fund data">
+  <div className={styles.skeletonTitle} />
+  <div className={styles.skeletonText} />
+  <div className={styles.skeletonChart} />
+</div>
+```
+
+**Spinner** (for actions/buttons only)
+```tsx
+<button disabled={isLoading}>
+  {isLoading ? <Spinner size="sm" /> : "Calculate"}
+</button>
+```
+
+#### 2. Toast Notifications
+**Pattern**: Non-blocking, auto-dismissible, queue-managed
+```tsx
+// Usage
+toast.success("Fund added to watchlist");
+toast.error("Failed to fetch NAV data");
+toast.info("Portfolio exported successfully", { duration: 5000 });
+```
+
+**Accessibility**: Must include `role="status"` or `role="alert"` and `aria-live="polite"` or `"assertive"`
+
+#### 3. Modal/Dialog
+**Pattern**: Focus trap, ESC to close, backdrop click to dismiss
+```tsx
+<Dialog open={isOpen} onClose={handleClose}>
+  <Dialog.Title>Compare Funds</Dialog.Title>
+  <Dialog.Content>...</Dialog.Content>
+  <Dialog.Actions>
+    <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+    <Button variant="primary" onClick={handleConfirm}>Compare</Button>
+  </Dialog.Actions>
+</Dialog>
+```
+
+**Accessibility**: `role="dialog"`, `aria-modal="true"`, focus management, keyboard trapping
+
+#### 4. Data Tables
+**Pattern**: Sortable columns, filterable, pagination, responsive collapse
+```tsx
+<Table>
+  <Table.Header>
+    <Table.HeaderCell sortable onSort={handleSort}>Scheme Name</Table.HeaderCell>
+    <Table.HeaderCell sortable>NAV</Table.HeaderCell>
+    <Table.HeaderCell>1Y Return</Table.HeaderCell>
+  </Table.Header>
+  <Table.Body>
+    {funds.map(fund => (
+      <Table.Row key={fund.schemeCode}>
+        <Table.Cell>{fund.schemeName}</Table.Cell>
+        <Table.Cell>₹{fund.nav}</Table.Cell>
+        <Table.Cell data-positive={fund.return1Y >= 0}>
+          {fund.return1Y}%
+        </Table.Cell>
+      </Table.Row>
+    ))}
+  </Table.Body>
+</Table>
+```
+
+**Mobile**: Stack cells vertically or use horizontal scroll with sticky column
+
+#### 5. Filter Panel
+**Pattern**: Collapsible, multi-select, clear all, apply on change
+```tsx
+<FilterPanel>
+  <FilterGroup label="Category">
+    <Checkbox value="equity" checked onChange={handleCategoryChange}>
+      Equity
+    </Checkbox>
+    <Checkbox value="debt" checked onChange={handleCategoryChange}>
+      Debt
+    </Checkbox>
+  </FilterGroup>
+  <FilterGroup label="Returns">
+    <RangeSlider min={0} max={50} value={returnRange} onChange={handleReturnChange} />
+  </FilterGroup>
+  <FilterActions>
+    <Button variant="ghost" onClick={handleClearAll}>Clear All</Button>
+    <Button variant="primary" onClick={handleApply}>Apply Filters</Button>
+  </FilterActions>
+</FilterPanel>
+```
+
+**Accessibility**: `role="region"`, `aria-label="Filter funds"`, keyboard navigation
+
+#### 6. Chart Components
+**Pattern**: Responsive container, tooltips, legend, accessibility labels
+```tsx
+<ResponsiveContainer width="100%" height={400}>
+  <AreaChart data={navPoints} accessibilityLayer>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="date" tickFormatter={formatDate} />
+    <YAxis tickFormatter={formatCurrency} />
+    <Tooltip content={<CustomTooltip />} />
+    <Area 
+      type="monotone" 
+      dataKey="nav" 
+      stroke="#2563eb" 
+      fill="url(#gradient)"
+      aria-label="NAV over time"
+    />
+  </AreaChart>
+</ResponsiveContainer>
+```
+
+**Accessibility**: Provide data table alternative or `<desc>` element summarizing trends
+
+#### 7. Empty States
+**Pattern**: Illustrative, actionable, friendly tone
+```tsx
+<EmptyState
+  icon={<SearchIcon />}
+  title="No funds found"
+  description="Try adjusting your filters or search query"
+  action={
+    <Button variant="primary" onClick={handleClearFilters}>
+      Clear Filters
+    </Button>
+  }
+/>
+```
+
+#### 8. Error States
+**Pattern**: Clear message, recovery action, optional retry
+```tsx
+<ErrorState
+  title="Failed to load NAV data"
+  message="The API is currently unavailable. We'll retry automatically."
+  action={
+    <Button variant="secondary" onClick={handleRetry}>
+      Retry Now
+    </Button>
+  }
+/>
+```
+
+### Interaction Patterns
+
+#### Keyboard Shortcuts
+- `Ctrl+K` or `Cmd+K`: Global search
+- `Ctrl+/` or `Cmd+/`: Show keyboard shortcuts
+- `Esc`: Close modal/dialog
+- `Tab`: Navigate form fields
+- `Arrow keys`: Navigate lists/menus
+- `Enter`: Confirm action
+
+#### Mobile Gestures
+- **Swipe right**: Add to watchlist (fund cards)
+- **Swipe left**: Remove from watchlist
+- **Pull down**: Refresh data
+- **Pinch**: Zoom chart (if applicable)
+- **Long press**: Show context menu
+
+#### Loading Strategies
+1. **Optimistic UI**: Update UI immediately, rollback on error
+2. **Skeleton First**: Show skeleton, replace with data
+3. **Stale-While-Revalidate**: Show cached data, fetch fresh in background
+4. **Progressive Enhancement**: Core content first, enhancements after
+
+### Accessibility Checklist
+- [ ] All interactive elements have `:focus-visible` styles
+- [ ] Form inputs have associated `<label>` elements
+- [ ] Images have `alt` text (or `alt=""` if decorative)
+- [ ] Color contrast ratio ≥4.5:1 for text, ≥3:1 for UI elements
+- [ ] Touch targets ≥44x44px on mobile
+- [ ] Semantic HTML (`<nav>`, `<main>`, `<article>`, etc.)
+- [ ] ARIA attributes only when semantic HTML insufficient
+- [ ] Keyboard navigation for all interactive elements
+- [ ] Screen reader testing with NVDA/JAWS/VoiceOver
+
+### Performance Budgets
+- **First Contentful Paint (FCP)**: <1.8s
+- **Largest Contentful Paint (LCP)**: <2.5s
+- **First Input Delay (FID)**: <100ms
+- **Cumulative Layout Shift (CLS)**: <0.1
+- **Time to Interactive (TTI)**: <3.8s
+- **JavaScript Bundle**: <200KB initial, <100KB per route
+- **Images**: WebP format, lazy loading, responsive srcset
+
+---
+
+## 8. Reference Documents
 
 - `Quick-Start-Guide.md` (4-hour MVP instructions)
 - `DEPLOYMENT.md` (frontend deployment architecture + CI/CD guardrails)
 - `Technical-FAQ-Decisions.md` (decision matrix, ADRs, compliance FAQ)
 - `MF-Data-PWA-Blueprint.pdf` (full blueprint – consult offline viewer)
-- `README.md` (public-facing summary)
+- `README.md` (public-facing summary + UI/UX roadmap)
 
 Keep this file synchronized with those sources. When uncertain, escalate via issue comment instead of guessing.
